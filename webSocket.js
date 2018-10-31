@@ -1,30 +1,25 @@
 /**
  * Created by lxr on 2016/6/10.
  */
-
-var app = require('http').createServer(handler),
-    io = require('socket.io').listen(app),
-    fs = require('fs');
-app.listen(8081);
+const express = require('express');
+const path = require('path');
+var app = express();
+var port = 8081;
+app.listen(port, () => {
+    console.log(`App listening at port ` + port)
+});
+var server = require('http').createServer(app);
+var io = require('socket.io').listen(server);
+app.use(express.static(path.join(__dirname, 'public')));
 io.set('log level', 1);//
 
 var clientList = [];//
 var messageHistory = [];
-function handler(req, res) {
-    fs.readFile(__dirname + '/html/index.html', function (err, data) {
-        if (err) {
-            res.writeHead(500);
-            return res.end('Error loading index.html');
-        }
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end(data);
-    });
-}
 io.sockets.on('connection', function (socket) {
     var User = {};
     User.socket = socket;
     clientList.push(User);
-    socket.emit('news', {m: '连接成功', l: messageHistory,t:new Date()});
+    socket.emit('news', {m: '连接成功', l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
         console.log(data.m);
         console.log(data.param);
@@ -52,11 +47,11 @@ var delegateFuncs = {
                 name = clientList[i].name;
             }
         }
-        var date=new Date();
+        var date = new Date();
         //将内容发送至所有人
         for (var i in clientList) {
             if (clientList[i].socket !== socket) {
-                clientList[i].socket.emit('news', {m: text, n: name,t:date});
+                clientList[i].socket.emit('news', {m: text, n: name, t: date});
             }
         }
         //记录发送内容到历史数据
@@ -73,7 +68,7 @@ var delegateFuncs = {
         var hasName = false;
         for (var i in clientList) {
             if (clientList[i].socket !== socket) {
-                clientList[i].socket.emit('news', {m: " 加入了！", n: text,t:new Date()});
+                clientList[i].socket.emit('news', {m: " 加入了！", n: text, t: new Date()});
             } else {
                 myi = i;
             }
