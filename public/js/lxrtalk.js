@@ -1,4 +1,4 @@
-var socket = io.connect('http://'+document.domain+":8081");//www.lxrtalk.com
+var socket = io.connect('http://' + document.domain + ":8081");//www.lxrtalk.com
 $(window).focus(function () {
     document.title = "聊聊";
 });
@@ -24,7 +24,13 @@ socket.on('news', function (data) {
     //打印历史消息
     if (data.l != null) {
         for (var i in data.l) {
-            $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + htmlEncodeJQ(data.l[i].m) + '</span></div>');
+            if (data.l[i].m.length > 200 && data.l[i].m.contains("data:image")) {
+                var img = new Image();//创建img容器
+                img.src = data.l[i].m;//给img容器引入base64的图片
+                $('#talkWin').append(img);
+            } else {
+                $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + htmlEncodeJQ(data.l[i].m) + '</span></div>');
+            }
         }
     }
     //提示连接成功
@@ -32,6 +38,7 @@ socket.on('news', function (data) {
     //新消息提示
     document.title = "新消息！";
 });
+
 function sendBtnClick() {
     var message = $('#inputText').val();
     socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
@@ -44,6 +51,7 @@ function sendBtnClick() {
     $('#inputText').val('');
     clearCheck();
 }
+
 function clearCheck() {
     var imgCount = $("img").length;
     var max = 18;
@@ -51,7 +59,9 @@ function clearCheck() {
         $('#talkWin').html("");
     }
 }
+
 document.onkeydown = keyDownSearch;
+
 function keyDownSearch(e) {
     //
     var theEvent = e || window.event;
@@ -60,9 +70,11 @@ function keyDownSearch(e) {
         sendBtnClick();
     }
 }
+
 function clearScreenClick() {
     $('#talkWin').html("");
 }
+
 /**
  * 设置昵称
  */
@@ -79,6 +91,7 @@ function setNameBtnClick() {
 function htmlEncodeJQ(str) {
     return $('<span/>').text(str).html();
 }
+
 function dataToStr(datetime, format) {
     var date = {
         "M+": datetime.getMonth() + 1,
