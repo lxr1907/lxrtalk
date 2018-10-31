@@ -59,6 +59,9 @@ $(function() {
                 reader.onload = function() {
                     //文件数据
                     console.log(this.result);
+                    //发送文件
+                    var message = this.result;
+                    socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
                 }
                 //无论成功与否都会触发
                 reader.onloadend = function() {
