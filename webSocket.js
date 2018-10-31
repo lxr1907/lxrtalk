@@ -29,8 +29,9 @@ var delegateFuncs = {
     },
     broadcast: function (param, socket) {
         var text = "";
-        if (param.text.length >= 200) {
-            text = param.substr(200);
+        var maxLength=200*1024;//200KB
+        if (param.text.length >= maxLength) {
+            text = param.substr(maxLength);
         } else {
             text = param.text;
         }
