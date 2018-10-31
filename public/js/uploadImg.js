@@ -62,6 +62,7 @@ $(function () {
                     //发送文件
                     var message = this.result;
                     socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+                    createImg("我",message);
                 }
                 //无论成功与否都会触发
                 reader.onloadend = function () {

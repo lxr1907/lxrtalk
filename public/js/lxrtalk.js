@@ -25,16 +25,7 @@ socket.on('news', function (data) {
     if (data.l != null) {
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
-                var img = new Image();//创建img容器
-                img.src = data.l[i].m;//给img容器引入base64的图片
-                img.style.width = "60px";
-                img.style.height = "60px";
-                $(img).click(function () {
-                    var _this = $(this);//将当前的pimg元素作为_this传入函数
-                    imgShow("#outerdiv", "#innerdiv", "#bigimg", img);
-                });
-                $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + '</span></div>');
-                $('#talkWin').append(img);
+               createImg(data.l[i].n,data.l[i].m);
             } else {
                 $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + htmlEncodeJQ(data.l[i].m) + '</span></div>');
             }
@@ -45,7 +36,18 @@ socket.on('news', function (data) {
     //新消息提示
     document.title = "新消息！";
 });
-
+function createImg(name,imgData) {
+    var img = new Image();//创建img容器
+    img.src =imgData ;//给img容器引入base64的图片
+    img.style.width = "60px";
+    img.style.height = "60px";
+    $(img).click(function () {
+        var _this = $(this);//将当前的pimg元素作为_this传入函数
+        imgShow("#outerdiv", "#innerdiv", "#bigimg", img);
+    });
+    $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
+    $('#talkWin').append(img);
+}
 function sendBtnClick() {
     var message = $('#inputText').val();
     socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
