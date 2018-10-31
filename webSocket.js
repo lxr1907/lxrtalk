@@ -5,14 +5,11 @@ const express = require('express');
 const path = require('path');
 var app = express();
 var port = 8081;
-app.listen(port, () => {
-    console.log(`App listening at port ` + port)
-});
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 app.use(express.static(path.join(__dirname, 'public')));
-io.set('log level', 1);//
-
+app.use('/', express.static(__dirname + '/'));
+server.listen(port);
 var clientList = [];//
 var messageHistory = [];
 io.sockets.on('connection', function (socket) {

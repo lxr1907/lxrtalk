@@ -1,4 +1,4 @@
-var socket = io.connect('http://'+document.domain);//www.lxrtalk.com
+var socket = io.connect('http://'+document.domain+":8081");//www.lxrtalk.com
 $(window).focus(function () {
     document.title = "聊聊";
 });
