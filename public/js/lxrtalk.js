@@ -24,9 +24,16 @@ socket.on('news', function (data) {
     //打印历史消息
     if (data.l != null) {
         for (var i in data.l) {
-            if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image")!=-1) {
+            if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
                 var img = new Image();//创建img容器
                 img.src = data.l[i].m;//给img容器引入base64的图片
+                img.style.width = "60px";
+                img.style.height = "60px";
+                $(img).click(function () {
+                    var _this = $(this);//将当前的pimg元素作为_this传入函数
+                    imgShow("#outerdiv", "#innerdiv", "#bigimg", img);
+                });
+                $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + '</span></div>');
                 $('#talkWin').append(img);
             } else {
                 $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + htmlEncodeJQ(data.l[i].m) + '</span></div>');
@@ -112,4 +119,16 @@ function dataToStr(datetime, format) {
         }
     }
     return format;
+}
+
+
+function imgShow(outerdiv, innerdiv, bigimg, _this) {
+    var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
+    if (width_now == _this.naturalWidth) {
+        $(_this).width("60px");
+        $(_this).height("60px");
+    } else {
+        $(_this).width(_this.naturalWidth + "px");
+        $(_this).height(_this.naturalHeight + "px");
+    }
 }

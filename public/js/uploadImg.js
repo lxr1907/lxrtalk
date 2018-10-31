@@ -1,4 +1,4 @@
-$(function() {
+$(function () {
     /*思路：
      *1.熟悉文件拖拽 目标元素 的四个事件,注意:ondragover、ondrop事件中阻止默认行为
      *2.拖拽放置后，获取到文件对象集合：e.dataTransfer.files
@@ -12,19 +12,19 @@ $(function() {
     var oDiv = $(".container").get(0);
     var oP = $(".text");
     //进入
-    oDiv.ondragenter = function() {
+    oDiv.ondragenter = function () {
     }
     //移动，需要阻止默认行为，否则直接在本页面中显示文件
-    oDiv.ondragover = function(e) {
+    oDiv.ondragover = function (e) {
 
         e.preventDefault();
     }
     //离开
-    oDiv.onleave = function() {
+    oDiv.onleave = function () {
         oP.html('请将图片文件拖拽至此区域！');
     }
     //拖拽放置，也需要阻止默认行为
-    oDiv.ondrop = function(e) {
+    oDiv.ondrop = function (e) {
 
         e.preventDefault();
         //获取拖拽过来的对象,文件对象集合
@@ -46,17 +46,17 @@ $(function() {
                 var reader = new FileReader();
                 //读为DataUrl,无返回值
                 reader.readAsDataURL(fs[i]);
-                reader.onloadstart = function(e) {
+                reader.onloadstart = function (e) {
                     //开始加载
                 }
                 // 这个事件在读取进行中定时触发
-                reader.onprogress = function(e) {
+                reader.onprogress = function (e) {
 
                     $("#total").html(e.total);
                 }
 
                 //当读取成功时触发，this.result为读取的文件数据
-                reader.onload = function() {
+                reader.onload = function () {
                     //文件数据
                     console.log(this.result);
                     //发送文件
@@ -64,7 +64,7 @@ $(function() {
                     socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
                 }
                 //无论成功与否都会触发
-                reader.onloadend = function() {
+                reader.onloadend = function () {
                     if (reader.error) {
                         console.log(reader.error);
                     } else {
@@ -78,3 +78,4 @@ $(function() {
 
     }
 });
+
