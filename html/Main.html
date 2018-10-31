@@ -1,0 +1,445 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head runat="server">
+    <title>主页</title>
+    <link rel="stylesheet" href="Styles/foundation/css/normalize.css" />
+    <link rel="Stylesheet" href="Styles/foundation/css/foundation.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="static/css/wow.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="static/local-common/css/common.css" />
+    <style id="styleid" type="text/css">
+        #talkWin
+        {
+            scrollbar-face-color: gray; /*滚动条页面颜色设定*/
+            scrollbar-highlight-color: rgb(192,192,192); /*滚动条斜面和左面颜色设*/
+            scrollbar-shadow-color: rgb(192,192,192); /*滚动条下斜面和右面颜色设*/
+            scrollbar-3dlight-color: rgb(192,192,192); /*滚动条上边和左边的边沿颜色 */
+            scrollbar-arrow-color: gray; /*滚动条两端箭头颜色设定 */
+            scrollbar-track-color: gray; /*滚动条底版颜色设定 */
+            scrollbar-darkshadow-color: rgb(192,192,192); /*滚动条下边和右边的边沿颜色设定*/
+        }
+    </style>
+    <script type="text/javascript" src="Scripts/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="Scripts/wowbbs.js"></script>
+    <script type="text/javascript" src="Styles/foundation/js/foundation.min.js"></script>
+    <script type="text/javascript" src="Styles/foundation/js/foundation/foundation.topbar.js"></script>
+    <script type="text/javascript" src="Styles/foundation/js/vendor/custom.modernizr.js"></script>
+    <!-- 魔兽官网脚本-->
+    <script type="text/javascript" src="static/local-common/js/core.js"></script>
+    <script type="text/javascript" src="static/local-common/js/tooltip.js"></script>
+    <script type="text/javascript">
+        $(document).foundation();
+        var scroll = true;
+        $(function () {
+            initPage();
+            //事件绑定：
+            $("#addRoleConfirm").click(function () {//关联角色
+                $(this).attr("disabled", true);
+                $("#addRoleText").text("关联中...");
+                wowbbs.addRole($("#addRoleName").val(), $("#addRoleServer").val(), function (data) {
+                    if (data == "true") {
+                        initPage();
+                        $("#addRoleText").text("关联成功");
+                    } else {
+                        $("#addRoleText").text(data);
+                    }
+                    $("#addRoleConfirm").attr("disabled", false);
+                });
+            });
+
+            $("#sendInput").click(function () {//发送回话
+                var text = $("#inputText").val();
+                if (text == "") {
+                    return;
+                }
+                $("#sendStatus").html("发送中...");
+                $(this).attr("disabled", true);
+                $("#inputText").val(""); //清空
+                if (sendToACC == 0) {
+                    var areaID = activeTalkArea;
+                } else {
+                    areaID = 1;
+                }
+                wowbbs.sendInput(areaID, sendToACC, text, function (data) {
+                    if (data == "true") {
+                        $("#sendStatus").html("发送成功！");
+                        $("#talkWin").scrollTop(document.getElementById('talkWin').scrollHeight); //将滚动条拖到最下
+                    } else {
+                        $("#sendStatus").html(data);
+                    }
+                    $("#sendInput").attr("disabled", false);
+                });
+            });
+
+            $("#setNickNameBtn").click(function () {//设置昵称
+                if ($("#setNickName").css("display") == "none") {
+
+                    $("#setNickNameBtn").val("确定");
+                    $("#setNickName").css("display", "block");
+                    $("#setNickName").val($("#nickName").html());
+                    $("#setNickName").focus();
+                    return;
+                }
+                $("#setNickNameBtn").val("修改");
+                var nickName = $("#setNickName").val();
+                wowbbs.setNickName(nickName, function (data) {
+                    if (data == "true") {
+                        $("#setNickName").css("display", "none");
+                        $("#nickName").html(nickName);
+                    } else {
+                        $("#setNickName").val(data);
+                    }
+                });
+            });
+
+            $("#getEquip").click(function () {//获取装备信息
+                wowbbs.getEquipInfo("", "", function (data) {
+                    $("#equip").html(data);
+                    wowbbs.bindItemTooltips();
+                });
+            });
+
+            $("#talkWin").scroll(function () {//滚动条
+                scroll = false;
+            });
+            $("#talkWin").scrollTop(function () {//滚动到底触发
+                scroll = true;
+            });
+
+
+            $("#Regist").click(function () { //注册按钮点击
+                var pwd = $("#RePassword").val();
+                if (pwd != $("#PasswordConfirm").val()) {
+                    alert("确认密码不相符！");
+                    return;
+                }
+                var acc = $("#ReAccount").val();
+                acc.replace(/(^\s*)|(\s*$)/g, "");
+                pwd.replace(/(^\s*)|(\s*$)/g, "");
+                if (acc === "" || pwd === "") {
+                    alert("账号或密码不可为空！");
+                    return;
+                }
+                var serverName = $("#ServerName").val();
+                var roleName = $("#reRoleName").val();
+                wowbbs.getEquipInfo(roleName, serverName, function (data) {
+                    if (data.indexOf("错误：") != -1) {
+                        alert(data);
+                    } else {
+                        $.ajax({
+                            type: 'POST',
+                            async: false,
+                            cache: false,
+                            dataType: "text",
+                            url: "Handler/Permission/Login.ashx?op=Regist",
+                            data: { ACCNAME: acc, PassWord: pwd, serverName: serverName, roleName: roleName },
+                            beforeSend: function () { },
+                            success: function (data) {
+                                if (data == "true") {
+                                    //添加角色
+                                    wowbbs.addRole(roleName, serverName);
+                                    if (confirm("注册成功！")) {
+                                        window.location.href = "Main.html";
+                                    }
+                                }
+                                else {
+                                    alert(data);
+                                }
+                            }
+                        });
+                    }
+                });
+
+            });
+            $("#Login").click(function () { //登陆验证
+                var acc = $("#Account").val();
+                var pwd = $("#Password").val();
+                acc.replace(/(^\s*)|(\s*$)/g, "");
+                pwd.replace(/(^\s*)|(\s*$)/g, "");
+                if (acc === "" || pwd === "") {
+                    alert("账号或密码不可为空！");
+                    return;
+                }
+                $.ajax({
+                    type: 'POST',
+                    async: false,
+                    cache: false,
+                    beforeSend: function () { },
+                    dataType: "text",
+                    url: "Handler/Permission/Login.ashx?op=LoginCheck",
+                    data: { ACCNAME: acc, PassWord: pwd },
+                    success: function (data) {
+                        if (data == "true") {
+                            confirm("登陆成功！");
+                            window.location.href = "Main.html";
+                        }
+                        else {
+                            if (data == "false") {
+                                alert("用户名或密码错误！");
+                            } else {
+                                alert(data);
+                            }
+                            $("#password").val("");
+                        }
+                    }
+                });
+            });
+        });
+        var activeTalkArea = 2;
+        function initPage() {//页面初始化
+            wowbbs.onKeyDown(13, function () {
+                $('#sendInput').click();
+            });
+            // $("#getEquip").click();//初始化页面获取装备信息
+
+            if (wowbbs.getAccID() == "") {//未登录用户访问
+                $("#setNickNameBtn").hide();
+                $("#addRole").hide();
+                $("#changeRole").hide();
+            } else {
+                $("#loga").hide();
+                $("#rega").hide();
+            }
+            wowbbs.getTalkArea(function (data) {//获取聊天区
+                if (data.indexOf("错误：") != -1) {
+                    alert(data);
+                } else {
+                    var talkTagOb = eval("(" + data + ")").Data;
+                    var talkDivTagshtml = "";
+                    for (var i = 0; i < talkTagOb.length; i++) {
+                        var id = talkTagOb[i].TALKAREAID;
+                        var name = talkTagOb[i].TALKAREANAME;
+                        talkDivTagshtml = talkDivTagshtml + '<dd><a href="#" id="talkTag' + id + '">' + name + '</a></dd>';
+                    }
+                    $("#talkDivTags").append(talkDivTagshtml);
+                    $("[id^='talkTag']").each(function () {
+                        $(this).click(function () {//绑定点击聊天区,刷新内容
+                            activeTalkArea = $(this).attr("id").substr(7, 1);
+                            sendToACC = 0;
+                            $("#sendTo").html("所有人");
+                            $("[id^='talkTag']").css("color", "#efc9a0");
+                            $("#talkTag" + activeTalkArea).css("color", "white");
+                            $("[id^='talkTag']").css("background-color", "");
+                            $("#talkTag" + activeTalkArea).css("background-color", "rgb(43,166,203)");
+                            freshTalk(activeTalkArea);
+                        });
+                    });
+
+                    $("#talkTag2").click(); //初始聊天区点击
+                }
+            });
+
+            wowbbs.getNickName(function (nickName) {//获取聊天昵称
+                $("#nickName").html(nickName);
+            });
+
+            wowbbs.getNewsArea(function (data) {
+                if (data.indexOf("错误：") != -1) {
+                    alert(data);
+                } else {
+                    var newsTagsObj = eval("(" + data + ")").Data;
+                    var newsTagshtml = "";
+                    for (var i = 0; i < newsTagsObj.length; i++) {
+                        var id = newsTagsObj[i].URLID;
+                        var name = newsTagsObj[i].URLNAME;
+                        newsTagshtml = newsTagshtml + '<dd><a href="#" id="newsTag' + id + '">' + name + '</a></dd>';
+
+                    }
+                    $("#newsDivTags").append(newsTagshtml);
+                    $("[id^='newsTag']").css("color", "#efc9a0");
+                    $("[id^='newsTag']").each(function () {
+                        $(this).click(function () {//绑定点击新闻区,刷新内容
+                            activeNewsArea = $(this).attr("id").substr(7, 1);
+                            $("[id^='newsTag']").css("color", "#efc9a0");
+                            $("#newsTag" + activeNewsArea).css("color", "white");
+                            $("[id^='newsTag']").css("background-color", "");
+                            $("#newsTag" + activeNewsArea).css("background-color", "rgb(43,166,203)");
+                            freshNews(activeNewsArea);
+                        });
+                    });
+                }
+            });
+        }
+        var autofreshTime = 3000;//自动刷新聊天参数
+        function freshTalk(areaID) {
+            if (areaID == activeTalkArea) {
+                wowbbs.getTalkText(areaID, function (data) {
+                    if (data.indexOf("错误：") != -1) {
+                        alert(data);
+                        return;
+                    }
+                    $("#talkWin").html(""); //清空聊天窗
+                    $("#talkWin").html(data.toString());
+                    if (scroll) {
+                        $("#talkWin").scrollTop(document.getElementById('talkWin').scrollHeight); //将滚动条拖到最下
+                    }
+                    $("[name^='fromAcc'],[name^='toAccid']").each(function () {
+                        $(this).click(function () {//绑定点击昵称，设置聊天目标
+                            var id = $(this).attr("name").substr(7);
+                            setTalkTo(id, $(this).html().replace("对", ""));
+                            $("#inputText").focus();
+                        });
+                    });
+                });
+                setTimeout("freshTalk(" + areaID + ")", autofreshTime);
+            }
+        }
+        function freshNews(areaID) {
+            wowbbs.getNewsText(areaID, function (data) {
+                if (data.indexOf("错误：") != -1) {
+                    alert(data);
+                    return;
+                }
+                var htmlcss = data.split("~");
+                $("#newsDetail").html(""); //清空新闻
+                $("#newsDetail").html(htmlcss[0]);
+                $("#styleid").html($("#styleid").html()+htmlcss[1]); 
+                $("#newsDetail a").each(function () {
+                    $(this).attr("target", "_blank");
+                });
+            });
+        }
+        var sendToACC = 0;
+        function setTalkTo(fromid, toName) {
+            $("#sendTo").html(toName);
+            sendToACC = fromid;
+        }
+
+        function RepNumber(obj) {
+            var reg = /^[\da-zA-Z@.]+$/g;
+            if (!reg.test(obj.value)) {//如果存在不合法参数
+                var txt = obj.value;
+                txt.replace(/[^0-9a-zA-Z@]+/, function (char, index, val) {//replace方法获取第一个不合法参数的下标index
+                    obj.value = val.replace(/[^0-9a-zA-Z@]/g, "");
+                    var rtextRange = null;
+                    if (obj.setSelectionRange) {
+                        obj.setSelectionRange(index, index);
+                    } else {//支持ie
+                        rtextRange = obj.createTextRange();
+                        rtextRange.moveStart('character', index);
+                        rtextRange.collapse(true);
+                        rtextRange.select();
+                    }
+                });
+            }
+        } 
+    </script>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <nav class="top-bar">
+        <ul class="title-area">
+            <li class="name">
+                <h1>
+                    <a href="#">WOWBBS</a></h1>
+            </li>
+            <li class="toggle-topbar menu-icon"><a href="#"><span>菜单</span></a></li></ul>
+        <section class="top-bar-section">
+            <!-- Left Nav Section -->
+            <ul class="left">
+                <li class="divider"></li>
+                <li class="active"><a href="#">主页</a></li>
+                <li><a href="#">好友</a></li>
+                <li class="divider"></li>
+                <li><a href="#">设置</a></li>
+                <li class="divider"></li>
+            </ul>
+            <!-- Right Nav Section -->
+            <ul class="right">
+                <li class="divider hide-for-small"></li>
+                <li class="divider"></li>
+                <li class="has-form">
+                    <div class="row collapse">
+                        <div class="small-8 columns">
+                            <input type="text" />
+                        </div>
+                        <div class="small-4 columns">
+                            <a href="#" class="button">搜索</a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </nav>
+    <div style="width: 1300px; height: 1000px; overflow: auto;">
+        <div style="float: left; background-color: rgb(113,63,28); width: 300px; height: 1000px;">
+            <div>
+                <span id="nickName"></span>
+                <input type="button" class="tiny button" id="setNickNameBtn" value="修改" /></div>
+            <input type="text" id="setNickName" style="width: 100px; display: none;" maxlength="15" />
+            <div>
+                <a id="addRole" href="#" data-dropdown="Ul1">添加角色</a>
+                <ul id="Ul1" class="[small] f-dropdown" data-dropdown-content style="width: 80px;">
+                    <li><span>角色名：</span><input id="addRoleName" type="text" value="看你妹之骚牛" /><span>服务器：</span><input
+                        id="addRoleServer" type="text" value="元素之力" /><a id="addRoleConfirm" class="tiny button">关联</a><span
+                            id="addRoleText"></span></li>
+                </ul>
+                <a id="changeRole" href="#" data-dropdown="drop1">更换角色</a>
+                <ul id="drop1" class="f-dropdown" data-dropdown-content>
+                    <li><a href="#">角色1</a></li>
+                    <li><a href="#">2</a></li>
+                    <li><a href="#">3</a></li>
+                </ul>
+                <a id="loga" href="#" data-dropdown="log">登陆</a>
+                <ul id="log" class="f-dropdown" data-dropdown-content>
+                    <li><span>账号：</span><input id="Account" type="text" maxlength="30" onkeyup="RepNumber(this)" /></li>
+                    <li><span>密码：</span><input id="Password" type="password" maxlength="30" /></li>
+                    <li><a id="Login" href="#">登陆</a></li>
+                </ul>
+                <a id="rega" href="#" data-dropdown="reg">注册</a>
+                <ul id="reg" class="f-dropdown" data-dropdown-content>
+                    <li><span>账号：</span><input id="ReAccount" type="text" maxlength="30" onkeyup="RepNumber(this)" /></li>
+                    <li><span>密码：</span><input id="RePassword" type="password" maxlength="30" /></li>
+                    <li><span>确认密码：</span><input id="PasswordConfirm" type="password" maxlength="30" /></li>
+                    <li><span>服务器：</span><input id="ServerName" type="text" maxlength="30" /></li>
+                    <li><span>角色名：</span><input id="reRoleName" type="text" maxlength="30" /></li>
+                    <li><a id="Regist" href="#">注册</a></li>
+                </ul>
+            </div>
+            <div id="disArea">
+                <span>角色名：</span><span id="roleName"></span><span>装备等级：</span><span id="eqLevel"></span>
+            </div>
+            <div>
+                <a id="getEquip" href="#">装备:</a></div>
+            <div id="equip" style="width: 30px; height: 500px; overflow: hidden; float: left;">
+            </div>
+            <div style="width: 200px; float: left;">
+            </div>
+        </div>
+        <div style="float: left; background-color: rgb(113,63,28); width: 400px; height: 1000px;">
+            <span>好友状态，最新消息</span>
+        </div>
+        <div style="float: left; background-color: rgb(113,63,28); width: 600px; height: 1000px;">
+            <span>新闻和最热门贴</span><a href="#" id="addNews">+</a>
+            <div>
+                <dl id="newsDivTags" class="sub-nav">
+                    <!--  <dd>
+                        <a href="#" id="talkTag3">公会</a></dd>-->
+                </dl>
+            </div>
+            <div id="newsDetail" style="width: 500px; height: 600px; overflow: auto;">
+            </div>
+        </div>
+        <div id="talkPart" style="position: fixed; bottom: 0px; left: 0px;" draggable="true">
+            <div style="margin-top: 5px; margin-left: 30px;">
+                <dl id="talkDivTags" class="sub-nav">
+                    <!-- <dd class="active">
+                        <a href="#" id="talkTag2">世界</a></dd>-->
+                </dl>
+            </div>
+            <div id="talkWin" style="height: 200px; width: 300px; overflow: auto; margin-left: 30px;">
+            </div>
+            <div id="inputArea" style="height: 80px; width: 300px; margin-top: 5px; margin-left: 30px;">
+                <div>
+                    <span>对 </span><span id="sendTo">所有人：</span></div>
+                <div style="width: 350px;">
+                    <input id="inputText" style="height: 30px; width: 200px; background-color: transparent;
+                        color: #efc9a0" maxlength="100" />
+                    <a href="#" id="sendInput" class="button" >发送（回车）</a><span
+                        id="sendStatus"> </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+</body>
+</html>
