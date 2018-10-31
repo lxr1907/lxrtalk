@@ -24,7 +24,7 @@ socket.on('news', function (data) {
     //打印历史消息
     if (data.l != null) {
         for (var i in data.l) {
-            if (data.l[i].m.length > 200 && data.l[i].m.contains("data:image")) {
+            if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image")!=-1) {
                 var img = new Image();//创建img容器
                 img.src = data.l[i].m;//给img容器引入base64的图片
                 $('#talkWin').append(img);
