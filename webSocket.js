@@ -62,21 +62,14 @@ var delegateFuncs = {
         } else {
             text = param.text;
         }
-        var myi = 0;
-        var hasName = false;
         for (var i in clientList) {
             if (clientList[i].socket !== socket) {
+                //通知其他人有新人加入
                 clientList[i].socket.emit('news', {m: " 加入了！", n: text, t: new Date()});
             } else {
-                myi = i;
-            }
-            if (clientList[i].name == text) {
-                hasName = true;
+                //设置自己昵称
+                clientList[i].name = text;
             }
         }
-        if (hasName) {
-            text = text + Math.ceil(Math.random() * 100);
-        }
-        clientList[i].name = text;
     }
 }
