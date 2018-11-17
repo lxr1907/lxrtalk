@@ -19,13 +19,24 @@
 
 #talkWin {
     overflow: auto;
+    margin-top:30px;
+    margin-bottom:30px;
 }
 
 #inputText {
     color: #08f;
     width: 62%;
 }
-/*--字体相对大小*/
+
 span {
     font-size: 1.5em;
+}
+
+.container {
+    height: 20%;
+    width: 100%;
+    z-index: 0;
+    overflow: hidden;
+    word-break: break-all;
+    border:1px dashed #000;
 }
