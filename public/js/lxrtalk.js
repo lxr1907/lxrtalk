@@ -25,7 +25,7 @@ socket.on('news', function (data) {
     if (data.l != null) {
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
-               createImg(data.l[i].n,data.l[i].m);
+                createImg(data.l[i].n, data.l[i].m);
             } else {
                 $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + htmlEncodeJQ(data.l[i].m) + '</span></div>');
             }
@@ -36,9 +36,10 @@ socket.on('news', function (data) {
     //新消息提示
     document.title = "新消息！";
 });
-function createImg(name,imgData) {
+
+function createImg(name, imgData) {
     var img = new Image();//创建img容器
-    img.src =imgData ;//给img容器引入base64的图片
+    img.src = imgData;//给img容器引入base64的图片
     img.style.width = "60px";
     img.style.height = "60px";
     $(img).click(function () {
@@ -48,6 +49,7 @@ function createImg(name,imgData) {
     $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(img);
 }
+
 function sendBtnClick() {
     var message = $('#inputText').val();
     socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
@@ -126,11 +128,17 @@ function dataToStr(datetime, format) {
 
 function imgShow(outerdiv, innerdiv, bigimg, _this) {
     var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
-    if (width_now == _this.naturalWidth) {
-        $(_this).width("60px");
-        $(_this).height("60px");
+    var smallImageWidth = 60;
+    if (width_now != smallImageWidth) {
+        $(_this).width(smallImageWidth + "px");
+        $(_this).height(_this.naturalHeight * smallImageWidth / _this.naturalWidth + "px");
     } else {
-        $(_this).width(_this.naturalWidth + "px");
-        $(_this).height(_this.naturalHeight + "px");
+        if (document.body.clientWidth >= _this.naturalWidth) {
+            $(_this).width(_this.naturalWidth + "px");
+            $(_this).height(_this.naturalHeight + "px");
+        } else {
+            $(_this).width(document.body.clientWidth + "px");
+            $(_this).height(_this.naturalHeight * document.body.clientWidth / _this.naturalWidth + "px");
+        }
     }
 }
