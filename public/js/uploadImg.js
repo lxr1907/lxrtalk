@@ -58,11 +58,11 @@ $(function () {
                 //当读取成功时触发，this.result为读取的文件数据
                 reader.onload = function () {
                     //文件数据
-                    console.log(this.result);
+                    //console.log(this.result);
                     //发送文件
                     var message = this.result;
                     socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
-                    createImg("我",message);
+                    createImg("我", message);
                 }
                 //无论成功与否都会触发
                 reader.onloadend = function () {
@@ -78,5 +78,23 @@ $(function () {
         }
 
     }
+    $("#imageBtn").change(function () {
+        // 上传image
+        var reads = new FileReader();
+        file = document.getElementById('imageBtn').files[0];
+        reads.readAsDataURL(file);
+        console.log(reads);
+        reads.onload = function (e) {
+            //文件数据
+            //console.log(this.result);
+            //发送文件
+            var message = this.result;
+            socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+            createImg("我", message);
+        };
+    });
+    $(".container").click(function () {
+        $("#imageBtn").click();
+    });
 });
 
