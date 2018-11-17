@@ -29,7 +29,7 @@ var delegateFuncs = {
     },
     broadcast: function (param, socket) {
         var text = "";
-        var maxLength=200*1024;//200KB
+        var maxLength=2*1024*1024;//200KB
         if (param.text.length >= maxLength) {
             text = param.substr(maxLength);
         } else {
