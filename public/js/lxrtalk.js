@@ -27,16 +27,21 @@ socket.on('news', function (data) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
                 createImg(data.l[i].n, data.l[i].m);
             } else {
-                $('#talkWin').append('<div><span>' + htmlEncodeJQ(data.l[i].n) + "：" + htmlEncodeJQ(data.l[i].m) + '</span></div>');
+                createText(data.l[i]);
             }
         }
     }
-    //提示连接成功
-    $('#talkWin').append('<div>' + dataToStr(new Date(data.t), 'h:m') + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+    if (data.m.indexOf("data:image") != -1) {
+        createImg(data.n, data.m);
+    } else {
+        createText(data)
+    }
     //新消息提示
     document.title = "新消息！";
 });
-
+function createText(data) {
+    $('#talkWin').append('<div>' + dataToStr(new Date(data.t), 'h:m') + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+}
 function createImg(name, imgData) {
     var img = new Image();//创建img容器
     img.src = imgData;//给img容器引入base64的图片
