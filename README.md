@@ -11,3 +11,7 @@ nodejs中用到express socket.io
 1.设置昵称或匿名聊天
 
 2.发送图片，或拖拽上传
+
+测试地址：
+
+http://lxrtalk.com:8081/html/index.html
