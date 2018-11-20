@@ -169,14 +169,14 @@ function videoShow(_this) {
     var smallImageWidth = 60;
     if (width_now != smallImageWidth) {
         $(_this).width(smallImageWidth + "px");
-        $(_this).height(_this.naturalHeight * smallImageWidth / _this.naturalWidth + "px");
+        $(_this).height(_this.videoHeight * smallImageWidth / _this.videoWidth + "px");
     } else {
-        if (document.body.clientWidth >= _this.naturalWidth) {
-            $(_this).width(_this.naturalWidth + "px");
-            $(_this).height(_this.naturalHeight + "px");
+        if (document.body.clientWidth >= _this.videoWidth) {
+            $(_this).width(_this.videoWidth + "px");
+            $(_this).height(_this.videoHeight + "px");
         } else {
             $(_this).width(document.body.clientWidth + "px");
-            $(_this).height(_this.naturalHeight * document.body.clientWidth / _this.naturalWidth + "px");
+            $(_this).height(_this.videoHeight * document.body.clientWidth / _this.videoWidth + "px");
         }
     }
     _this.play();
