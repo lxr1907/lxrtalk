@@ -16,57 +16,42 @@ $(function () {
         e.preventDefault();
     }
 
+    function uploadFile(file) {
+        //文件类型
+        var _type = file.type;
+        //判断文件类型
+        if (_type.indexOf('image') != -1 || _type.indexOf('video') != -1) {
+            //文件大小控制
+            console.log("文件大小：" + file.size);
+            //读取文件对象
+            var reader = new FileReader();
+            //读为DataUrl,无返回值
+            reader.readAsDataURL(file);
+            //当读取成功时触发，this.result为读取的文件数据
+            reader.onload = function () {
+                //文件数据
+                console.log("上传成功，长度" + this.result.length);
+                //发送文件
+                var message = this.result;
+                socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+                if (_type.indexOf('image') != -1) {
+                    createImg("我", message);
+                } else if (_type.indexOf('video') != -1) {
+                    createVideo("我", message);
+                }
+            }
+        } else {
+            alert('请上传图片,或视频文件！');
+        }
+    }
+
     //拖拽放置，也需要阻止默认行为
     function dropFile(e) {
         e.preventDefault();
         //获取拖拽过来的对象,文件对象集合
         var fs = e.dataTransfer.files;
         //若为表单域中的file标签选中的文件，则使用form[表单name].files[0]来获取文件对象集合
-        //打印长度
-        console.log(fs.length);
-        //循环多文件拖拽上传
-        for (var i = 0; i < fs.length; i++) {
-            //文件类型
-            var _type = fs[i].type;
-
-            console.log(_type);
-            //判断文件类型
-            if (_type.indexOf('image') != -1 || _type.indexOf('video') != -1) {
-                //文件大小控制
-                console.log(fs[i].size);
-                //读取文件对象
-                var reader = new FileReader();
-                //读为DataUrl,无返回值
-                reader.readAsDataURL(fs[i]);
-                reader.onloadstart = function (e) {
-                    //开始加载
-                }
-                // 这个事件在读取进行中定时触发
-                reader.onprogress = function (e) {
-                    $("#total").html(e.total);
-                }
-
-                //当读取成功时触发，this.result为读取的文件数据
-                reader.onload = function () {
-                    //文件数据
-                    //console.log(this.result);
-                    //发送文件
-                    var message = this.result;
-                    socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
-                    createImg("我", message);
-                }
-                //无论成功与否都会触发
-                reader.onloadend = function () {
-                    if (reader.error) {
-                        console.log(reader.error);
-                    } else {
-                        //上传没有错误，ajax发送文件，上传二进制文件
-                    }
-                }
-            } else {
-                alert('请上传图片,或视频文件！');
-            }
-        }
+        uploadFile(fs[0]);
     }
 
     oDiv.ondrop = function (e) {
@@ -80,16 +65,7 @@ $(function () {
         // 上传image
         var reads = new FileReader();
         file = document.getElementById(name).files[0];
-        reads.readAsDataURL(file);
-        console.log(reads);
-        reads.onload = function (e) {
-            //文件数据
-            //console.log(this.result);
-            //发送文件
-            var message = this.result;
-            socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
-            createImg("我", message);
-        };
+        uploadFile(file);
     }
 
     $("#imageBtn").change(function () {

@@ -66,7 +66,7 @@ function createVideo(name, videoData) {
     video.style.width = "60px";
     video.style.height = "60px";
     $(video).click(function () {
-        videoShow( video);
+        videoShow(video);
     });
     $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(video);
@@ -164,12 +164,14 @@ function imgShow(_this) {
         }
     }
 }
+
 function videoShow(_this) {
     var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
     var smallImageWidth = 60;
     if (width_now != smallImageWidth) {
         $(_this).width(smallImageWidth + "px");
         $(_this).height(_this.videoHeight * smallImageWidth / _this.videoWidth + "px");
+        _this.pause();
     } else {
         if (document.body.clientWidth >= _this.videoWidth) {
             $(_this).width(_this.videoWidth + "px");
@@ -178,6 +180,6 @@ function videoShow(_this) {
             $(_this).width(document.body.clientWidth + "px");
             $(_this).height(_this.videoHeight * document.body.clientWidth / _this.videoWidth + "px");
         }
+        _this.play();
     }
-    _this.play();
 }
