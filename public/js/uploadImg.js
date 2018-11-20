@@ -21,7 +21,7 @@ $(function () {
     }
     //离开
     oDiv.onleave = function () {
-        oP.html('请将图片文件拖拽至此区域！');
+        oP.html('请将图片或视频文件拖拽至此区域！');
     }
     //拖拽放置，也需要阻止默认行为
     oDiv.ondrop = function (e) {
@@ -39,7 +39,7 @@ $(function () {
 
             console.log(_type);
             //判断文件类型
-            if (_type.indexOf('image') != -1) {
+            if (_type.indexOf('image') != -1 || _type.indexOf('video') != -1) {
                 //文件大小控制
                 console.log(fs[i].size);
                 //读取文件对象
@@ -51,7 +51,6 @@ $(function () {
                 }
                 // 这个事件在读取进行中定时触发
                 reader.onprogress = function (e) {
-
                     $("#total").html(e.total);
                 }
 
@@ -73,7 +72,7 @@ $(function () {
                     }
                 }
             } else {
-                alert('请上传图片文件！');
+                alert('请上传图片,或视频文件！');
             }
         }
 
