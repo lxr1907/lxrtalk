@@ -54,8 +54,7 @@ function createImg(name, imgData) {
     img.style.width = "60px";
     img.style.height = "60px";
     $(img).click(function () {
-        var _this = $(this);//将当前的pimg元素作为_this传入函数
-        imgShow("#outerdiv", "#innerdiv", "#bigimg", img);
+        imgShow(img);
     });
     $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(img);
@@ -67,8 +66,7 @@ function createVideo(name, videoData) {
     video.style.width = "60px";
     video.style.height = "60px";
     $(video).click(function () {
-        var _this = $(this);//将当前的pimg元素作为_this传入函数
-        //imgShow("#outerdiv", "#innerdiv", "#bigimg", img);
+        videoShow( video);
     });
     $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(video);
@@ -150,7 +148,7 @@ function dataToStr(datetime, format) {
 }
 
 
-function imgShow(outerdiv, innerdiv, bigimg, _this) {
+function imgShow(_this) {
     var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
     var smallImageWidth = 60;
     if (width_now != smallImageWidth) {
@@ -165,4 +163,21 @@ function imgShow(outerdiv, innerdiv, bigimg, _this) {
             $(_this).height(_this.naturalHeight * document.body.clientWidth / _this.naturalWidth + "px");
         }
     }
+}
+function videoShow(_this) {
+    var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
+    var smallImageWidth = 60;
+    if (width_now != smallImageWidth) {
+        $(_this).width(smallImageWidth + "px");
+        $(_this).height(_this.naturalHeight * smallImageWidth / _this.naturalWidth + "px");
+    } else {
+        if (document.body.clientWidth >= _this.naturalWidth) {
+            $(_this).width(_this.naturalWidth + "px");
+            $(_this).height(_this.naturalHeight + "px");
+        } else {
+            $(_this).width(document.body.clientWidth + "px");
+            $(_this).height(_this.naturalHeight * document.body.clientWidth / _this.naturalWidth + "px");
+        }
+    }
+    _this.play();
 }
