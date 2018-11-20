@@ -26,6 +26,8 @@ socket.on('news', function (data) {
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
                 createImg(data.l[i].n, data.l[i].m);
+            } else if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:video") != -1) {
+                createVideo(data.l[i].n, data.l[i].m);
             } else {
                 createText(data.l[i]);
             }
@@ -33,26 +35,41 @@ socket.on('news', function (data) {
     }
     if (data.m.indexOf("data:image") != -1) {
         createImg(data.n, data.m);
+    } else if (data.m.indexOf("data:video") != -1) {
+        createVideo(data.n, data.m);
     } else {
         createText(data)
     }
     //新消息提示
     document.title = "新消息！";
 });
+
 function createText(data) {
     $('#talkWin').append('<div>' + dataToStr(new Date(data.t), 'h:m') + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
 }
+
 function createImg(name, imgData) {
     var img = new Image();//创建img容器
     img.src = imgData;//给img容器引入base64的图片
     img.style.width = "60px";
     img.style.height = "60px";
     $(img).click(function () {
-        var _this = $(this);//将当前的pimg元素作为_this传入函数
-        imgShow("#outerdiv", "#innerdiv", "#bigimg", img);
+        imgShow(img);
     });
     $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(img);
+}
+
+function createVideo(name, videoData) {
+    var video = document.createElement('video');//创建video容器
+    video.src = videoData;//给video容器引入base64的数据
+    video.style.width = "60px";
+    video.style.height = "60px";
+    $(video).click(function () {
+        videoShow( video);
+    });
+    $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
+    $('#talkWin').append(video);
 }
 
 function sendBtnClick() {
@@ -131,7 +148,7 @@ function dataToStr(datetime, format) {
 }
 
 
-function imgShow(outerdiv, innerdiv, bigimg, _this) {
+function imgShow(_this) {
     var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
     var smallImageWidth = 60;
     if (width_now != smallImageWidth) {
@@ -146,4 +163,21 @@ function imgShow(outerdiv, innerdiv, bigimg, _this) {
             $(_this).height(_this.naturalHeight * document.body.clientWidth / _this.naturalWidth + "px");
         }
     }
+}
+function videoShow(_this) {
+    var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
+    var smallImageWidth = 60;
+    if (width_now != smallImageWidth) {
+        $(_this).width(smallImageWidth + "px");
+        $(_this).height(_this.videoHeight * smallImageWidth / _this.videoWidth + "px");
+    } else {
+        if (document.body.clientWidth >= _this.videoWidth) {
+            $(_this).width(_this.videoWidth + "px");
+            $(_this).height(_this.videoHeight + "px");
+        } else {
+            $(_this).width(document.body.clientWidth + "px");
+            $(_this).height(_this.videoHeight * document.body.clientWidth / _this.videoWidth + "px");
+        }
+    }
+    _this.play();
 }

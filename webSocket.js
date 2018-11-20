@@ -35,7 +35,7 @@ var delegateFuncs = {
         } else {
             text = param.text;
         }
-        if (messageHistory.length >= 5) {
+        if (messageHistory.length >= 20) {
             messageHistory.shift();
         }
         var name = "匿名";
