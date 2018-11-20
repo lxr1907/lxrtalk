@@ -26,8 +26,8 @@ socket.on('news', function (data) {
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
                 createImg(data.l[i].n, data.l[i].m);
-            } else if (data.m.indexOf("data:video") != -1) {
-                createVideo(data.n, data.m);
+            } else if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:video") != -1) {
+                createVideo(data.l[i].n, data.l[i].m);
             } else {
                 createText(data.l[i]);
             }
