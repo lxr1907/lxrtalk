@@ -1,23 +1,6 @@
 /**
  * Created by lxr on 2016/6/10.
  */
-var log4js = require("log4js");
-log4js.configure({
-    appenders: {
-        ruleConsole: {type: 'console'},
-        ruleFile: {
-            type: 'dateFile',
-            filename: 'logs/lxrtalk-',
-            pattern: 'yyyy-MM-dd.log',
-            maxLogSize: 10 * 1000 * 1000,
-            numBackups: 3,
-            alwaysIncludePattern: true
-        }
-    },
-    categories: {
-        default: {appenders: ['ruleConsole', 'ruleFile'], level: 'info'}
-    }
-});
 const express = require('express');
 const path = require('path');
 var app = express();
@@ -25,7 +8,9 @@ var port = 8081;
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 io.attach(server, {
-    maxHttpBufferSize: 10e8
+    pingInterval: 10000,
+    pingTimeout: 5000,
+    cookie: false
 });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', express.static(__dirname + '/'));
@@ -38,18 +23,23 @@ io.sockets.on('connection', function (socket) {
     clientList.push(User);
     socket.emit('news', {m: '连接成功', l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
-        //console.log(data.m);
-        //console.log(data.param);
+        console.log(data.m);
+        console.log(data.param);
         delegateFuncs[data.m](data.param, socket);
     });
 });
 var delegateFuncs = {
     logfunction: function (param) {
-        //console.log(param.text);
+        console.log(param.text);
     },
     broadcast: function (param, socket) {
         var text = "";
-        text = param.text;
+        var maxLength=2*1024*1024;//200KB
+        if (param.text.length >= maxLength) {
+            text = param.substr(maxLength);
+        } else {
+            text = param.text;
+        }
         if (messageHistory.length >= 20) {
             messageHistory.shift();
         }
