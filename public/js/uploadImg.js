@@ -10,22 +10,14 @@ $(function () {
 
     //必须将jq对象转换为js对象，调用原生方法
     var oDiv = $(".container").get(0);
-    var oP = $(".text");
-    //进入
-    oDiv.ondragenter = function () {
-    }
+    var oDiv2 = $(".containerVideo").get(0);
     //移动，需要阻止默认行为，否则直接在本页面中显示文件
     oDiv.ondragover = function (e) {
-
         e.preventDefault();
     }
-    //离开
-    oDiv.onleave = function () {
-        oP.html('请将图片或视频文件拖拽至此区域！');
-    }
-    //拖拽放置，也需要阻止默认行为
-    oDiv.ondrop = function (e) {
 
+    //拖拽放置，也需要阻止默认行为
+    function dropFile(e) {
         e.preventDefault();
         //获取拖拽过来的对象,文件对象集合
         var fs = e.dataTransfer.files;
@@ -75,12 +67,19 @@ $(function () {
                 alert('请上传图片,或视频文件！');
             }
         }
-
     }
-    $("#imageBtn").change(function () {
+
+    oDiv.ondrop = function (e) {
+        dropFile(e);
+    }
+    oDiv2.ondrop = function (e) {
+        dropFile(e);
+    }
+
+    function uploadSend(name) {
         // 上传image
         var reads = new FileReader();
-        file = document.getElementById('imageBtn').files[0];
+        file = document.getElementById(name).files[0];
         reads.readAsDataURL(file);
         console.log(reads);
         reads.onload = function (e) {
@@ -91,9 +90,19 @@ $(function () {
             socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
             createImg("我", message);
         };
+    }
+
+    $("#imageBtn").change(function () {
+        uploadSend('imageBtn');
+    });
+    $("#videoBtn").change(function () {
+        uploadSend('videoBtn');
     });
     $(".container").click(function () {
         $("#imageBtn").click();
+    });
+    $(".containerVideo").click(function () {
+        $("#videoBtn").click();
     });
 });
 
