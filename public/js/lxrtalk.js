@@ -61,6 +61,11 @@ function createImg(name, imgData) {
 }
 
 function createVideo(name, videoData) {
+    var userAgent = navigator.userAgent;
+    if (userAgent.indexOf("Safari") > -1) {
+        createImg(name, videoData);
+        return;
+    }
     var video = document.createElement('video');//创建video容器
     video.src = videoData;//给video容器引入base64的数据
     video.style.width = "60px";
@@ -170,6 +175,7 @@ function videoShow(_this) {
     if (width_now != smallImageWidth) {
         $(_this).width(smallImageWidth + "px");
         $(_this).height(_this.videoHeight * smallImageWidth / _this.videoWidth + "px");
+        _this.pause();
     } else {
         if (document.body.clientWidth >= _this.videoWidth) {
             $(_this).width(_this.videoWidth + "px");
@@ -178,6 +184,6 @@ function videoShow(_this) {
             $(_this).width(document.body.clientWidth + "px");
             $(_this).height(_this.videoHeight * document.body.clientWidth / _this.videoWidth + "px");
         }
+        _this.play();
     }
-    _this.play();
 }
