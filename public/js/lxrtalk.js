@@ -1,6 +1,10 @@
 var socket = io();//www.lxrtalk.com
-$(window).focus(function () {
-    document.title = "聊聊";
+document.addEventListener('visibilitychange', function() {
+    var isHidden = document.hidden;
+    if (isHidden) {
+    } else {
+        document.title = "聊聊";
+    }
 });
 var myname = "";
 var MaxDisplayMessages = 20;
