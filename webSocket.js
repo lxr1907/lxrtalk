@@ -4,34 +4,34 @@
 const express = require('express');
 const path = require('path');
 var app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 var port = 8081;
 var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
-io.attach(server, {
-    pingInterval: 10000,
-    pingTimeout: 5000,
-    cookie: false
-});
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/', express.static(__dirname + '/'));
+var io = require('socket.io')(server);
 server.listen(port);
 var clientList = [];//
 var messageHistory = [];
 var userCount = 0;
-io.sockets.on('connection', function (socket) {
+io.on('connection', function (socket) {
+    var addedUser = false;
     var User = {};
     User.socket = socket;
     clientList.push(User);
-    userCount++;
-    socket.emit('news', {m: '连接成功,在线人数:'+userCount, l: messageHistory, t: new Date()});
+    socket.emit('news', {m: '连接成功,在线人数:' + userCount, l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
         console.log(data.m);
         console.log(data.param);
         delegateFuncs[data.m](data.param, socket);
+        if (!addedUser) {
+            addedUser = true;
+            ++userCount;
+        }
     });
     socket.on('disconnect', (reason) => {
         console.log(reason);
-        userCount--;
+        if (addedUser) {
+            --userCount;
+        }
     });
     socket.on('error', (error) => {
         console.log(error);
