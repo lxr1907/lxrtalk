@@ -45,7 +45,11 @@ socket.on('news', function (data) {
 });
 
 function createText(data) {
-    $('#talkWin').append('<div>' + dataToStr(new Date(data.t), 'h:m') + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+    var timeStr = "";
+    if (data.t != null) {
+        timeStr = dataToStr(new Date(data.t), 'h:m');
+    }
+    $('#talkWin').append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
 }
 
 function createImg(name, imgData) {
@@ -71,7 +75,7 @@ function createVideo(name, videoData) {
     video.style.width = "60px";
     video.style.height = "60px";
     $(video).click(function () {
-        videoShow( video);
+        videoShow(video);
     });
     $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(video);
@@ -169,6 +173,7 @@ function imgShow(_this) {
         }
     }
 }
+
 function videoShow(_this) {
     var width_now = $(_this).width();//获取当前点击的pimg元素中的src属性
     var smallImageWidth = 60;

@@ -17,15 +17,24 @@ app.use('/', express.static(__dirname + '/'));
 server.listen(port);
 var clientList = [];//
 var messageHistory = [];
+var userCount = 0;
 io.sockets.on('connection', function (socket) {
     var User = {};
     User.socket = socket;
     clientList.push(User);
-    socket.emit('news', {m: '连接成功', l: messageHistory, t: new Date()});
+    userCount++;
+    socket.emit('news', {m: '连接成功,在线人数:'+userCount, l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
         console.log(data.m);
         console.log(data.param);
         delegateFuncs[data.m](data.param, socket);
+    });
+    socket.on('disconnect', (reason) => {
+        console.log(reason);
+        userCount--;
+    });
+    socket.on('error', (error) => {
+        console.log(error);
     });
 });
 var delegateFuncs = {
@@ -34,7 +43,7 @@ var delegateFuncs = {
     },
     broadcast: function (param, socket) {
         var text = "";
-        var maxLength=2*1024*1024;//200KB
+        var maxLength = 2 * 1024 * 1024;//200KB
         if (param.text.length >= maxLength) {
             text = param.substr(maxLength);
         } else {
