@@ -34,10 +34,11 @@ $(function () {
                 //发送文件
                 var message = this.result;
                 socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+                createNameSpan("我");
                 if (_type.indexOf('image') != -1) {
-                    createImg("我", message);
+                    createImg(message);
                 } else if (_type.indexOf('video') != -1) {
-                    createVideo("我", message);
+                    createVideo(message);
                 }
             }
         } else {

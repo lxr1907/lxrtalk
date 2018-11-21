@@ -1,5 +1,5 @@
 var socket = io();//www.lxrtalk.com
-document.addEventListener('visibilitychange', function() {
+document.addEventListener('visibilitychange', function () {
     var isHidden = document.hidden;
     if (isHidden) {
     } else {
@@ -27,20 +27,25 @@ socket.on('news', function (data) {
     }
     //打印历史消息
     if (data.l != null) {
+        $('#talkWin').html("");
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
-                createImg(data.l[i].n, data.l[i].m);
+                createNameSpan(data.l[i].n);
+                createImg(data.l[i].m);
             } else if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:video") != -1) {
-                createVideo(data.l[i].n, data.l[i].m);
+                createNameSpan(data.l[i].n);
+                createVideo(data.l[i].m);
             } else {
                 createText(data.l[i]);
             }
         }
     }
     if (data.m.indexOf("data:image") != -1) {
-        createImg(data.n, data.m);
+        createNameSpan(data.n);
+        createImg(data.m);
     } else if (data.m.indexOf("data:video") != -1) {
-        createVideo(data.n, data.m);
+        createNameSpan(data.n);
+        createVideo(data.m);
     } else {
         createText(data)
     }
@@ -56,7 +61,7 @@ function createText(data) {
     $('#talkWin').append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
 }
 
-function createImg(name, imgData) {
+function createImg(imgData) {
     var img = new Image();//创建img容器
     img.src = imgData;//给img容器引入base64的图片
     img.style.width = "60px";
@@ -64,14 +69,13 @@ function createImg(name, imgData) {
     $(img).click(function () {
         imgShow(img);
     });
-    $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(img);
 }
 
-function createVideo(name, videoData) {
+function createVideo(videoData) {
     var userAgent = navigator.userAgent;
     if (userAgent.indexOf("Safari") > -1) {
-        createImg(name, videoData);
+        createImg(videoData);
         return;
     }
     var video = document.createElement('video');//创建video容器
@@ -81,8 +85,15 @@ function createVideo(name, videoData) {
     $(video).click(function () {
         videoShow(video);
     });
-    $('#talkWin').append('<div><span>' + htmlEncodeJQ(name) + "：" + '</span></div>');
     $('#talkWin').append(video);
+}
+
+function createNameSpan(name) {
+    var nameSpan = "";
+    if (name != null && name.length != 0) {
+        nameSpan = '<span>' + htmlEncodeJQ(name) + "：</span>";
+    }
+    $('#talkWin').append('<div>' + nameSpan + '</div>');
 }
 
 function sendBtnClick() {

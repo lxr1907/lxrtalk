@@ -19,8 +19,8 @@ io.on('connection', function (socket) {
     clientList.push(User);
     socket.emit('news', {m: '连接成功,在线人数:' + userCount, l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
-        console.log(data.m);
-        console.log(data.param);
+        // console.log(data.m);
+        // console.log(data.param);
         delegateFuncs[data.m](data.param, socket);
         if (!addedUser) {
             addedUser = true;
@@ -28,18 +28,18 @@ io.on('connection', function (socket) {
         }
     });
     socket.on('disconnect', (reason) => {
-        console.log(reason);
+        //console.log(reason);
         if (addedUser) {
             --userCount;
         }
     });
     socket.on('error', (error) => {
-        console.log(error);
+        //console.log(error);
     });
 });
 var delegateFuncs = {
     logfunction: function (param) {
-        console.log(param.text);
+        //console.log(param.text);
     },
     broadcast: function (param, socket) {
         var text = "";
