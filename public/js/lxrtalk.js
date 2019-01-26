@@ -19,7 +19,7 @@ $(function () {
 });
 socket.on('news', function (data) {
     if (data.n == null) {
-        data.n = myname;
+        data.n = "";
     }
     //清除第一条
     if ($('#talkWin').children().length > MaxDisplayMessages) {
@@ -28,17 +28,7 @@ socket.on('news', function (data) {
     //打印历史消息
     if (data.l != null) {
         $('#talkWin').html("");
-        for (var i in data.l) {
-            if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
-                createNameSpan(data.l[i].n);
-                createImg(data.l[i].m);
-            } else if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:video") != -1) {
-                createNameSpan(data.l[i].n);
-                createVideo(data.l[i].m);
-            } else {
-                createText(data.l[i]);
-            }
-        }
+        //showHistoryList(data.l);
     }
     if (data.m.indexOf("data:image") != -1) {
         createNameSpan(data.n);
@@ -52,12 +42,26 @@ socket.on('news', function (data) {
     //新消息提示
     document.title = "新消息！";
 });
-
+function  showHistoryList(dataList) {
+    for (var i in dataList) {
+        if (dataList[i].m.length > 200 && dataList[i].m.indexOf("data:image") != -1) {
+            createNameSpan(dataList[i].n);
+            createImg(dataList[i].m);
+        } else if (dataList[i].m.length > 200 && dataList[i].m.indexOf("data:video") != -1) {
+            createNameSpan(dataList[i].n);
+            createVideo(dataList[i].m);
+        } else {
+            createText(dataList[i]);
+        }
+    }
+}
 function createText(data) {
     var timeStr = "";
     if (data.t != null) {
         timeStr = dataToStr(new Date(data.t), 'h:m');
     }
+    //解密文本
+    data.m = getDAesString(data.m, data.n);
     $('#talkWin').append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
 }
 
@@ -98,7 +102,9 @@ function createNameSpan(name) {
 
 function sendBtnClick() {
     var message = $('#inputText').val();
-    socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+    //加密文本
+    messageAes = getAesString(message, myname);
+    socket.emit('clientmessage', {m: 'broadcast', param: {text: messageAes}});
 
     $('#talkWin').append('<div>' + dataToStr(new Date(), 'h:m') + ' <span class="mymessage">我</span>：<span>' + htmlEncodeJQ(message) + '</span></div>');
     //清除第一条
@@ -143,6 +149,7 @@ function setNameBtnClick() {
     socket.emit('clientmessage', {m: 'setname', param: {text: name.trim().substring(0, MaxNameLength)}});
     $("#mynamediv").hide();
     $("#textDiv").show();
+    myname = name;
 }
 
 function htmlEncodeJQ(str) {
@@ -206,4 +213,16 @@ function videoShow(_this) {
         }
         _this.play();
     }
+}
+
+//文本加密解密
+function getAesString(data, keyStr) {//加密
+    var ciphertext =CryptoJS.AES.encrypt(data, keyStr).toString();
+    return ciphertext;    //返回的是base64格式的密文
+}
+
+function getDAesString(ciphertext, keyStr) {//解密
+    var bytes  = CryptoJS.AES.decrypt(ciphertext, keyStr);
+    var originalText = bytes.toString(CryptoJS.enc.Utf8);
+    return originalText;
 }
