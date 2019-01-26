@@ -42,7 +42,8 @@ socket.on('news', function (data) {
     //新消息提示
     document.title = "新消息！";
 });
-function  showHistoryList(dataList) {
+
+function showHistoryList(dataList) {
     for (var i in dataList) {
         if (dataList[i].m.length > 200 && dataList[i].m.indexOf("data:image") != -1) {
             createNameSpan(dataList[i].n);
@@ -55,6 +56,7 @@ function  showHistoryList(dataList) {
         }
     }
 }
+
 function createText(data) {
     var timeStr = "";
     if (data.t != null) {
@@ -217,12 +219,18 @@ function videoShow(_this) {
 
 //文本加密解密
 function getAesString(data, keyStr) {//加密
-    var ciphertext =CryptoJS.AES.encrypt(data, keyStr).toString();
+    if (keyStr == null) {
+        return data;
+    }
+    var ciphertext = CryptoJS.AES.encrypt(data, keyStr).toString();
     return ciphertext;    //返回的是base64格式的密文
 }
 
 function getDAesString(ciphertext, keyStr) {//解密
-    var bytes  = CryptoJS.AES.decrypt(ciphertext, keyStr);
+    if (keyStr == null) {
+        return ciphertext;
+    }
+    var bytes = CryptoJS.AES.decrypt(ciphertext, keyStr);
     var originalText = bytes.toString(CryptoJS.enc.Utf8);
     return originalText;
 }
