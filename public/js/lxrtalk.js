@@ -219,7 +219,7 @@ function videoShow(_this) {
 
 //文本加密解密
 function getAesString(data, keyStr) {//加密
-    if (keyStr == null) {
+    if (keyStr == null || keyStr.length == 0) {
         return data;
     }
     var ciphertext = CryptoJS.AES.encrypt(data, keyStr).toString();
@@ -227,7 +227,7 @@ function getAesString(data, keyStr) {//加密
 }
 
 function getDAesString(ciphertext, keyStr) {//解密
-    if (keyStr == null) {
+    if (keyStr == null || keyStr.length == 0) {
         return ciphertext;
     }
     var bytes = CryptoJS.AES.decrypt(ciphertext, keyStr);
