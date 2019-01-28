@@ -1,0 +1,27 @@
+{
+  "name": "lxrtalk",
+  "version": "1.0.0",
+  "description": "聊天室",
+  "main": "webSocket.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^1.4.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lxr1907/lxrtalk.git"
+  },
+  "keywords": [
+    "talk"
+  ],
+  "author": "lxr",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lxr1907/lxrtalk/issues"
+  },
+  "homepage": "https://github.com/lxr1907/lxrtalk#readme"
+}
