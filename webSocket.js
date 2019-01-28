@@ -10,18 +10,20 @@ var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 server.listen(port);
 var clientList = [];//
+var clientSockets = {};//
 var messageHistory = [];
 var userCount = 0;
-var groupList=[];
+var groupMap = {};
+var MAX_GROUPS = 5;
 io.on('connection', function (socket) {
     var addedUser = false;
     var User = {};
     User.socket = socket;
+    User.myGroupMap = {};
     clientList.push(User);
+    clientSockets[socket.id] = User;
     socket.emit('news', {m: '连接成功,在线人数:' + userCount, l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
-        // console.log(data.m);
-        // console.log(data.param);
         delegateFuncs[data.m](data.param, socket);
         if (!addedUser) {
             addedUser = true;
@@ -29,10 +31,18 @@ io.on('connection', function (socket) {
         }
     });
     socket.on('disconnect', (reason) => {
-        //console.log(reason);
         if (addedUser) {
             --userCount;
         }
+        for (var i in clientList) {
+            if (clientList[i].socket === socket) {
+                clientList.splice(i, 1);
+            }
+        }
+        for (var i in clientSockets[socket.id].groupList) {
+            delete clientSockets[socket.id].groupList[i].usersMap[socket.id];
+        }
+        delete clientSockets[socket.id];
     });
     socket.on('error', (error) => {
         //console.log(error);
@@ -87,40 +97,92 @@ var delegateFuncs = {
             }
         }
     },
-    foundGroup:function (param, socket) {
+    foundGroup: function (param, socket) {
         //组名
-        var groupName="";
+        var groupName = param.groupName;
         //组密码
-        var groupPwd="";
-        if (param.groupName.length >= 20) {
-            groupName = param.substr(20);
-        } else {
-            groupName = param.groupName;
+        var groupPwd = param.groupPwd;
+        if (groupName.length >= 20) {
+            groupName = groupName.substr(0, 20);
         }
-        if (param.groupPwd.length >= 20) {
-            groupPwd = param.substr(20);
-        } else {
-            groupPwd = param.groupPwd;
+        if (groupMap[groupName] != null) {
+            socket.emit('news', {m: " 群组创建失败，名称重复！", t: new Date()});
+            return;
         }
-        var group={};
-        group.groupName=groupName;
-        group.groupPwd=groupPwd;
-        groupList.push(group);
+        if (groupPwd.length >= 20) {
+            groupPwd = groupPwd.substr(0, 20);
+        }
+        //初始化群组的信息
+        var group = {};
+        //群名称
+        group.groupName = groupName;
+        //入群密码
+        group.groupPwd = groupPwd;
+        //群用户列表
+        group.usersMap = {};
+        //将自己先加入该群组
+        group.usersMap[socket.id] = clientSockets[socket.id];
+        //群成员数
+        group.count = 1;
+        //群主
+        group.leader = clientSockets[socket.id];
+        //群列表
+        groupMap[group.groupName] = group;
+        if (clientSockets[socket.id] != null) {
+            //该用户加入的群列表，便于查询
+            clientSockets[socket.id].groupList.push(group);
+        }
         //通知所有人
         for (var i in clientList) {
             if (clientList[i].socket !== socket) {
-                //通知其他人有新人加入
-                clientList[i].socket.emit('news', {m: " 加入了！", n: text, t: new Date()});
+                //通知其他人有新群
+                clientList[i].socket.emit('news', {m: " 群组创建：" + groupName, t: new Date()});
             } else {
-                //设置自己昵称
-                clientList[i].name = text;
+                //通知自己
+                clientList[i].socket.emit('news', {m: " 群组创建：" + groupName + "成功！", g: groupName, t: new Date()});
             }
         }
     },
-    joinGroup :function () {
-
+    joinGroup: function (param, socket) {
+        //组名
+        var groupName = param.groupName;
+        //组密码
+        var groupPwd = param.groupPwd;
+        if (groupName.length >= 20) {
+            socket.emit('news', {m: " 群组加入失败，不存在该群！", t: new Date()});
+            return;
+        }
+        if (groupMap[groupName] == null) {
+            socket.emit('news', {m: " 群组加入失败，不存在该群！", t: new Date()});
+            return;
+        }
+        if (groupMap[groupName].groupPwd !== groupPwd) {
+            socket.emit('news', {m: " 群组加入失败，密码错误！", t: new Date()});
+            return;
+        }
+        //通知群里其他人
+        for (var i in groupMap[groupName].usersMap) {
+            groupMap[groupName].usersMap[i].emit('news', {m: "加入了该群", n: clientSockets[socket.id].name, t: new Date()});
+        }
+        //入群成功
+        groupMap[groupName].usersMap[socket.id] = clientSockets[socket.id];
+        groupMap[groupName].count++;
+        //该用户加入的群列表，便于查询
+        clientSockets[socket.id].myGroupMap[groupName] = groupMap[groupName];
+        //通知自己
+        clientList[i].socket.emit('news', {m: " 群组加入：" + groupName + "成功！", g: groupName, t: new Date()});
     },
-    quitGroup:function () {
-
+    quitGroup: function (param, socket) {
+        //组名
+        var groupName = param.groupName;
+        delete groupMap[groupName].usersMap[socket.id];
+        groupMap[groupName].count--;
+        delete clientSockets[socket.id].myGroupMap[groupName];
+        //通知自己
+        clientList[i].socket.emit('news', {m: " 群组退出：" + groupName + "成功！", g: groupName, t: new Date()});
+        //通知群里其他人
+        for (var i in groupMap[groupName].usersMap) {
+            groupMap[groupName].usersMap[i].emit('news', {m: "加入了该群", n: clientSockets[socket.id].name, t: new Date()});
+        }
     }
 }
