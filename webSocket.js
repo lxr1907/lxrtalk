@@ -12,6 +12,7 @@ server.listen(port);
 var clientList = [];//
 var messageHistory = [];
 var userCount = 0;
+var groupList=[];
 io.on('connection', function (socket) {
     var addedUser = false;
     var User = {};
@@ -85,5 +86,41 @@ var delegateFuncs = {
                 clientList[i].name = text;
             }
         }
+    },
+    foundGroup:function (param, socket) {
+        //组名
+        var groupName="";
+        //组密码
+        var groupPwd="";
+        if (param.groupName.length >= 20) {
+            groupName = param.substr(20);
+        } else {
+            groupName = param.groupName;
+        }
+        if (param.groupPwd.length >= 20) {
+            groupPwd = param.substr(20);
+        } else {
+            groupPwd = param.groupPwd;
+        }
+        var group={};
+        group.groupName=groupName;
+        group.groupPwd=groupPwd;
+        groupList.push(group);
+        //通知所有人
+        for (var i in clientList) {
+            if (clientList[i].socket !== socket) {
+                //通知其他人有新人加入
+                clientList[i].socket.emit('news', {m: " 加入了！", n: text, t: new Date()});
+            } else {
+                //设置自己昵称
+                clientList[i].name = text;
+            }
+        }
+    },
+    joinGroup :function () {
+
+    },
+    quitGroup:function () {
+
     }
 }
