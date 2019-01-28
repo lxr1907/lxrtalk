@@ -8,7 +8,7 @@ document.addEventListener('visibilitychange', function () {
 });
 var myname = "";
 //已加入的分组列表
-var groupList=[];
+var myGroupMap={};
 var MaxDisplayMessages = 20;
 var MaxNameLength = 10;
 $(function () {

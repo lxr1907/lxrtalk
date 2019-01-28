@@ -39,8 +39,8 @@ io.on('connection', function (socket) {
                 clientList.splice(i, 1);
             }
         }
-        for (var i in clientSockets[socket.id].groupList) {
-            delete clientSockets[socket.id].groupList[i].usersMap[socket.id];
+        for (var i in clientSockets[socket.id].myGroupMap) {
+            delete clientSockets[socket.id].myGroupMap[i].usersMap[socket.id];
         }
         delete clientSockets[socket.id];
     });
@@ -65,16 +65,45 @@ var delegateFuncs = {
         }
         var name = "匿名";
         //查找发送者设置的昵称
-        for (var i in clientList) {
-            if (clientList[i].socket === socket) {
-                name = clientList[i].name;
-            }
-        }
+        name = clientSockets[socket.id].name;
         var date = new Date();
         //将内容发送至所有人
         for (var i in clientList) {
             if (clientList[i].socket !== socket) {
                 clientList[i].socket.emit('news', {m: text, n: name, t: date});
+            }
+        }
+        //记录发送内容到历史数据
+        messageHistory.push({m: text, n: name});
+    },
+    sendToGroup: function (param, socket) {
+        var groupName = param.g;
+        if (clientSockets[socket.id].myGroupMap[groupName] == null) {
+            //通知自己
+            socket.emit('news', {
+                m: " 失败，未加入该组！", g: groupName, t: new Date()
+            });
+            return;
+        }
+        var text = "";
+        var maxLength = 2 * 1024 * 1024;//200KB
+        if (param.text.length >= maxLength) {
+            text = param.substr(maxLength);
+        } else {
+            text = param.text;
+        }
+        if (messageHistory.length >= 20) {
+            messageHistory.shift();
+        }
+        var name = "匿名";
+        //查找发送者设置的昵称
+        name = clientSockets[socket.id].name;
+        var date = new Date();
+        //将内容发送至群组内
+        var usersMap = clientSockets[socket.id].myGroupMap[groupName].usersMap;
+        for (var i in usersMap) {
+            if (usersMap[i].socket !== socket) {
+                usersMap[i].socket.emit('news', {m: text, n: name, t: date});
             }
         }
         //记录发送内容到历史数据
@@ -130,16 +159,21 @@ var delegateFuncs = {
         groupMap[group.groupName] = group;
         if (clientSockets[socket.id] != null) {
             //该用户加入的群列表，便于查询
-            clientSockets[socket.id].groupList.push(group);
+            clientSockets[socket.id].myGroupMap[groupName] = group;
         }
         //通知所有人
         for (var i in clientList) {
             if (clientList[i].socket !== socket) {
-                //通知其他人有新群
+                //通知其他人有新群组
                 clientList[i].socket.emit('news', {m: " 群组创建：" + groupName, t: new Date()});
             } else {
                 //通知自己
-                clientList[i].socket.emit('news', {m: " 群组创建：" + groupName + "成功！", g: groupName, t: new Date()});
+                clientList[i].socket.emit('news', {
+                    m: " 群组创建成功！" + groupName,
+                    g: groupName,
+                    c: "foundGroupSuccess",
+                    t: new Date()
+                });
             }
         }
     },
@@ -170,7 +204,10 @@ var delegateFuncs = {
         //该用户加入的群列表，便于查询
         clientSockets[socket.id].myGroupMap[groupName] = groupMap[groupName];
         //通知自己
-        clientList[i].socket.emit('news', {m: " 群组加入：" + groupName + "成功！", g: groupName, t: new Date()});
+        socket.emit('news', {
+            m: " 群组加入成功！" + groupName + "", g: groupName,
+            c: "joinGroupSuccess", t: new Date()
+        });
     },
     quitGroup: function (param, socket) {
         //组名
@@ -179,7 +216,12 @@ var delegateFuncs = {
         groupMap[groupName].count--;
         delete clientSockets[socket.id].myGroupMap[groupName];
         //通知自己
-        clientList[i].socket.emit('news', {m: " 群组退出：" + groupName + "成功！", g: groupName, t: new Date()});
+        clientList[i].socket.emit('news', {
+            m: " 群组退出：" + groupName + "成功！",
+            g: groupName,
+            c: "quitGroupSuccess",
+            t: new Date()
+        });
         //通知群里其他人
         for (var i in groupMap[groupName].usersMap) {
             groupMap[groupName].usersMap[i].emit('news', {m: "加入了该群", n: clientSockets[socket.id].name, t: new Date()});
