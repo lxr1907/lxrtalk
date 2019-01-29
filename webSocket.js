@@ -9,7 +9,6 @@ var port = 8081;
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 server.listen(port);
-var clientList = [];//
 var clientSockets = {};//
 var messageHistory = [];
 var userCount = 0;
@@ -20,7 +19,6 @@ io.on('connection', function (socket) {
     var User = {};
     User.socket = socket;
     User.myGroupMap = {};
-    clientList.push(User);
     clientSockets[socket.id] = User;
     socket.emit('news', {m: '连接成功,在线人数:' + userCount, l: messageHistory, t: new Date()});
     socket.on('clientmessage', function (data) {
@@ -34,13 +32,13 @@ io.on('connection', function (socket) {
         if (addedUser) {
             --userCount;
         }
-        for (var i in clientList) {
-            if (clientList[i].socket === socket) {
-                clientList.splice(i, 1);
-            }
-        }
+        //从群中删除该用户
         for (var i in clientSockets[socket.id].myGroupMap) {
             delete clientSockets[socket.id].myGroupMap[i].usersMap[socket.id];
+        }
+        //当群中没人时删除该群
+        if (clientSockets[socket.id].myGroupMap[i].count == 0) {
+            delete groupMap[clientSockets[socket.id].myGroupMap[i].groupName];
         }
         delete clientSockets[socket.id];
     });
@@ -68,9 +66,9 @@ var delegateFuncs = {
         name = clientSockets[socket.id].name;
         var date = new Date();
         //将内容发送至所有人
-        for (var i in clientList) {
-            if (clientList[i].socket !== socket) {
-                clientList[i].socket.emit('news', {m: text, n: name, t: date});
+        for (var i in clientSockets) {
+            if (clientSockets[i].socket !== socket) {
+                clientSockets[i].socket.emit('news', {m: text, n: name, t: date});
             }
         }
         //记录发送内容到历史数据
@@ -116,13 +114,13 @@ var delegateFuncs = {
         } else {
             text = param.text;
         }
-        for (var i in clientList) {
-            if (clientList[i].socket !== socket) {
+        for (var i in clientSockets) {
+            if (clientSockets[i].socket !== socket) {
                 //通知其他人有新人加入
-                clientList[i].socket.emit('news', {m: " 加入了！", n: text, t: new Date()});
+                clientSockets[i].socket.emit('news', {m: " 加入了！", n: text, t: new Date()});
             } else {
                 //设置自己昵称
-                clientList[i].name = text;
+                clientSockets[i].name = text;
             }
         }
     },
@@ -162,13 +160,13 @@ var delegateFuncs = {
             clientSockets[socket.id].myGroupMap[groupName] = group;
         }
         //通知所有人
-        for (var i in clientList) {
-            if (clientList[i].socket !== socket) {
+        for (var i in clientSockets) {
+            if (clientSockets[i].socket !== socket) {
                 //通知其他人有新群组
-                clientList[i].socket.emit('news', {m: " 群组创建：" + groupName, t: new Date()});
+                clientSockets[i].socket.emit('news', {m: " 群组创建：" + groupName, t: new Date()});
             } else {
                 //通知自己
-                clientList[i].socket.emit('news', {
+                socket.emit('news', {
                     m: " 群组创建成功！" + groupName,
                     g: groupName,
                     c: "foundGroupSuccess",
@@ -216,7 +214,7 @@ var delegateFuncs = {
         groupMap[groupName].count--;
         delete clientSockets[socket.id].myGroupMap[groupName];
         //通知自己
-        clientList[i].socket.emit('news', {
+        socket.emit('news', {
             m: " 群组退出：" + groupName + "成功！",
             g: groupName,
             c: "quitGroupSuccess",
