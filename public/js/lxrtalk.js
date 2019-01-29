@@ -6,22 +6,37 @@ document.addEventListener('visibilitychange', function () {
         document.title = "聊聊";
     }
 });
-var myname = "";
+var defaultName = "";
 //已加入的分组列表
 var myGroupMap = {};
 var MaxDisplayMessages = 20;
 var MaxNameLength = 10;
 $(function () {
-    //var name = prompt("设置昵称：");
-    //myname = name;
-    //setMyname(name);
     $("#textDiv").hide();
     //预防网页劫持广告注入
     $("iframe").remove();
 });
+
+function setLocalStorate(key, val) {
+    var storage = window.localStorage;
+    storage[key] = val;
+}
+
+function getLocalStorate(key, val) {
+    var storage = window.localStorage;
+    return storage[key];
+}
+
+socket.on('connect', function () {
+    var myName = getLocalStorate("myName");
+    //根据缓存直接设置自己的昵称
+    if (myName != null && myName.length != 0) {
+        setMyName(myName);
+    }
+});
 socket.on('news', function (data) {
     if (data.n == null) {
-        data.n = myname;
+        data.n = defaultName;
     }
 
     //打印历史消息
@@ -161,10 +176,20 @@ function keyDownSearch(e) {
  */
 function setNameBtnClick() {
     var name = $("#myname").val();
+    setMyName(name);
+}
+
+function setMyName(name) {
     if (name == null || name.trim().length == 0) {
         return;
     }
-    socket.emit('clientmessage', {m: 'setname', param: {text: name.trim().substring(0, MaxNameLength)}});
+    name = name.trim().substring(0, MaxNameLength);
+    socket.emit('clientmessage', {m: 'setname', param: {text: name}});
+    hideSetNameArea();
+    setLocalStorate("myName", name);
+}
+
+function hideSetNameArea() {
     $("#mynamediv").hide();
     $("#textDiv").show();
 }
