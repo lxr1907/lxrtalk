@@ -34,12 +34,16 @@ io.on('connection', function (socket) {
         }
         //从群中删除该用户
         for (var i in clientSockets[socket.id].myGroupMap) {
+            //每个加入过的群人数减一
+            clientSockets[socket.id].myGroupMap[i].count--;
             //当群中没人时删除该群
             if (clientSockets[socket.id].myGroupMap[i].count == 0) {
                 delete groupMap[clientSockets[socket.id].myGroupMap[i].groupName];
             }
+            //从每个加入过的群中，删除该断线用户
             delete clientSockets[socket.id].myGroupMap[i].usersMap[socket.id];
         }
+        //从总客户端map中删除该用户
         delete clientSockets[socket.id];
     });
     socket.on('error', (error) => {
