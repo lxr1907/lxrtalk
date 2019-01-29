@@ -34,11 +34,11 @@ io.on('connection', function (socket) {
         }
         //从群中删除该用户
         for (var i in clientSockets[socket.id].myGroupMap) {
+            //当群中没人时删除该群
+            if (clientSockets[socket.id].myGroupMap[i].count == 0) {
+                delete groupMap[clientSockets[socket.id].myGroupMap[i].groupName];
+            }
             delete clientSockets[socket.id].myGroupMap[i].usersMap[socket.id];
-        }
-        //当群中没人时删除该群
-        if (clientSockets[socket.id].myGroupMap[i].count == 0) {
-            delete groupMap[clientSockets[socket.id].myGroupMap[i].groupName];
         }
         delete clientSockets[socket.id];
     });
