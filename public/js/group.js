@@ -1,4 +1,5 @@
-var selectedGroup = "talkWin";//大厅默认0
+var defultWin = "talkWin";
+var selectedGroup = defultWin;//大厅默认talkWin
 function foundGroupClick() {
     //组名
     var groupName = $('#groupName').val();
@@ -47,12 +48,25 @@ function bindGroupTabOnclick() {
 }
 
 function showTab() {
-    var tabs = document.getElementsByClassName('tab-head')[0].getElementsByTagName('input'),
-        contents = document.getElementsByClassName('tab-content')[0].getElementsByTagName('div');
+    var tabs = document.getElementsByClassName('tab-head')[0].getElementsByTagName('input');
     for (var i = 0, len = tabs.length; i < len; i++) {
         if (tabs[i] === this) {
             tabs[i].className = 'selected';
             selectedGroup = tabs[i].getAttribute("name");
+            $("#groupWin" + selectedGroup).show();
+        } else {
+            tabs[i].className = '';
+            var hideGroupName = tabs[i].getAttribute("name");
+            $("#groupWin" + hideGroupName).hide();
+        }
+    }
+}
+
+function resetTab() {
+    var tabs = document.getElementsByClassName('tab-head')[0].getElementsByTagName('input');
+    for (var i = 0, len = tabs.length; i < len; i++) {
+        if (selectedGroup === tabs[i].getAttribute("name")) {
+            tabs[i].className = 'selected';
             $("#groupWin" + selectedGroup).show();
         } else {
             tabs[i].className = '';

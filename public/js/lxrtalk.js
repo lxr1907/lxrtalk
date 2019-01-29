@@ -26,7 +26,7 @@ socket.on('news', function (data) {
 
     //打印历史消息
     if (data.l != null) {
-        $('#groupWintalkWin').html("");
+        $('#groupWin' + defultWin).html("");
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
                 createNameSpan(data.l[i]);
@@ -42,7 +42,7 @@ socket.on('news', function (data) {
     //有组名发到分组，没有则组名为默认组
 
     if (data.g == null) {
-        data.g = "talkWin";
+        data.g = defultWin;
     }
     if (data.m.indexOf("data:image") != -1) {
         createImg(data);
@@ -51,9 +51,25 @@ socket.on('news', function (data) {
     } else {
         createText(data)
     }
+    //调整每个tab的消息可见性
+    resetTab();
     //新消息提示
     document.title = "新消息！";
+    if (data.g != defultWin) {
+        newMessageTabCss(data.g);
+    }
 });
+
+//有新消息的群tab变为粉色
+function newMessageTabCss(groupName) {
+    var tabs = document.getElementsByClassName('tab-head')[0].getElementsByTagName('input');
+    for (var i = 0, len = tabs.length; i < len; i++) {
+        if (groupName === tabs[i].getAttribute("name")) {
+            tabs[i].className = 'message';
+        }
+    }
+}
+
 socket.on('joinGroupSuccess', function (data) {
     joinGroupSuccess(data);
 });
@@ -115,7 +131,7 @@ function createNameSpan(data) {
 
 function sendBtnClick() {
     var message = $('#inputText').val();
-    if (selectedGroup == "talkWin") {
+    if (selectedGroup == defultWin) {
         socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
     } else {
         sendToGroup();

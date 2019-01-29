@@ -193,7 +193,11 @@ var delegateFuncs = {
         }
         //通知群里其他人
         for (var i in groupMap[groupName].usersMap) {
-            groupMap[groupName].usersMap[i].emit('news', {m: "加入了该群", n: clientSockets[socket.id].name, t: new Date()});
+            groupMap[groupName].usersMap[i].socket.emit('news', {
+                m: "加入了该群",
+                n: clientSockets[socket.id].name,
+                t: new Date()
+            });
         }
         //入群成功
         groupMap[groupName].usersMap[socket.id] = clientSockets[socket.id];
