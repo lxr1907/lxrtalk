@@ -35,8 +35,10 @@ $(function () {
                 var message = this.result;
                 socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
                 createNameSpan("我");
+                var data = {};
+                data.m = message;
                 if (_type.indexOf('image') != -1) {
-                    createImg(message);
+                    createImg(data);
                 } else if (_type.indexOf('video') != -1) {
                     createVideo(message);
                 }
