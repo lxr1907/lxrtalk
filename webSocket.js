@@ -100,8 +100,8 @@ var delegateFuncs = {
         //将内容发送至群组内
         var usersMap = clientSockets[socket.id].myGroupMap[groupName].usersMap;
         for (var i in usersMap) {
-            if (usersMap[i].socket !== socket) {
-                usersMap[i].socket.emit('news', {m: text, n: name, t: date});
+            if (clientSockets[i].socket !== socket) {
+                usersMap[i].socket.emit('news', {m: text, n: name, t: date, g: groupName});
             }
         }
         //记录发送内容到历史数据
@@ -166,10 +166,9 @@ var delegateFuncs = {
                 clientSockets[i].socket.emit('news', {m: " 群组创建：" + groupName, t: new Date()});
             } else {
                 //通知自己
-                socket.emit('news', {
+                socket.emit('joinGroupSuccess', {
                     m: " 群组创建成功！" + groupName,
                     g: groupName,
-                    c: "foundGroupSuccess",
                     t: new Date()
                 });
             }
@@ -202,9 +201,10 @@ var delegateFuncs = {
         //该用户加入的群列表，便于查询
         clientSockets[socket.id].myGroupMap[groupName] = groupMap[groupName];
         //通知自己
-        socket.emit('news', {
-            m: " 群组加入成功！" + groupName + "", g: groupName,
-            c: "joinGroupSuccess", t: new Date()
+        socket.emit('joinGroupSuccess', {
+            m: " 群组加入成功！" + groupName + "",
+            g: groupName,
+            t: new Date()
         });
     },
     quitGroup: function (param, socket) {

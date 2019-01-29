@@ -8,7 +8,7 @@ document.addEventListener('visibilitychange', function () {
 });
 var myname = "";
 //已加入的分组列表
-var myGroupMap={};
+var myGroupMap = {};
 var MaxDisplayMessages = 20;
 var MaxNameLength = 10;
 $(function () {
@@ -23,36 +23,39 @@ socket.on('news', function (data) {
     if (data.n == null) {
         data.n = myname;
     }
-    //清除第一条
-    if ($('#talkWin').children().length > MaxDisplayMessages) {
-        $('#talkWin').children(":first").remove();
-    }
+
     //打印历史消息
     if (data.l != null) {
-        $('#talkWin').html("");
+        $('#groupWintalkWin').html("");
         for (var i in data.l) {
             if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
-                createNameSpan(data.l[i].n);
+                createNameSpan(data.l[i]);
                 createImg(data.l[i].m);
             } else if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:video") != -1) {
-                createNameSpan(data.l[i].n);
+                createNameSpan(data.l[i]);
                 createVideo(data.l[i].m);
             } else {
                 createText(data.l[i]);
             }
         }
     }
+    //有组名发到分组，没有则组名为默认组
+
+    if (data.g == null) {
+        data.g = "talkWin";
+    }
     if (data.m.indexOf("data:image") != -1) {
-        createNameSpan(data.n);
-        createImg(data.m);
+        createImg(data);
     } else if (data.m.indexOf("data:video") != -1) {
-        createNameSpan(data.n);
-        createVideo(data.m);
+        createVideo(data);
     } else {
         createText(data)
     }
     //新消息提示
     document.title = "新消息！";
+});
+socket.on('joinGroupSuccess', function (data) {
+    joinGroupSuccess(data);
 });
 
 function createText(data) {
@@ -60,24 +63,35 @@ function createText(data) {
     if (data.t != null) {
         timeStr = dataToStr(new Date(data.t), 'h:m');
     }
-    $('#talkWin').append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+    $('#groupWin' + data.g).append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+    cleanFirstIfReachMax('#groupWin' + data.g);
 }
 
-function createImg(imgData) {
+function cleanFirstIfReachMax(tag) {
+    //清除第一条
+    if ($(tag).children().length > MaxDisplayMessages) {
+        $(tag).children(":first").remove();
+    }
+}
+
+function createImg(data) {
+    createNameSpan(data);
     var img = new Image();//创建img容器
-    img.src = imgData;//给img容器引入base64的图片
+    img.src = data.m;//给img容器引入base64的图片
     img.style.width = "60px";
     img.style.height = "60px";
     $(img).click(function () {
         imgShow(img);
     });
-    $('#talkWin').append(img);
+    $('#groupWin' + data.g).append(img);
 }
 
-function createVideo(videoData) {
+function createVideo(data) {
+    createNameSpan(data);
+    var videoData = data.m;
     var userAgent = navigator.userAgent;
     if (userAgent.indexOf("Safari") > -1) {
-        createImg(videoData);
+        createImg(data);
         return;
     }
     var video = document.createElement('video');//创建video容器
@@ -87,37 +101,33 @@ function createVideo(videoData) {
     $(video).click(function () {
         videoShow(video);
     });
-    $('#talkWin').append(video);
+    $('#groupWin' + data.g).append(video);
 }
 
-function createNameSpan(name) {
+function createNameSpan(data) {
+    var name = data.n;
     var nameSpan = "";
     if (name != null && name.length != 0) {
         nameSpan = '<span>' + htmlEncodeJQ(name) + "：</span>";
     }
-    $('#talkWin').append('<div>' + nameSpan + '</div>');
+    $('#groupWin' + data.g).append('<div>' + nameSpan + '</div>');
 }
 
 function sendBtnClick() {
     var message = $('#inputText').val();
-    socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
-
-    $('#talkWin').append('<div>' + dataToStr(new Date(), 'h:m') + ' <span class="mymessage">我</span>：<span>' + htmlEncodeJQ(message) + '</span></div>');
+    if (selectedGroup == "talkWin") {
+        socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+    } else {
+        sendToGroup();
+    }
+    $('#groupWin' + selectedGroup).append('<div>' + dataToStr(new Date(), 'h:m') + ' <span class="mymessage">我</span>：<span>' + htmlEncodeJQ(message) + '</span></div>');
     //清除第一条
-    if ($('#talkWin').children().length > MaxDisplayMessages) {
-        $('#talkWin').children(":first").remove();
+    if ($('#groupWin' + selectedGroup).children().length > MaxDisplayMessages) {
+        $('#groupWin' + selectedGroup).children(":first").remove();
     }
     $('#inputText').val('');
-    clearCheck();
 }
 
-function clearCheck() {
-    var imgCount = $("img").length;
-    var max = 18;
-    if (imgCount >= max) {
-        $('#talkWin').html("");
-    }
-}
 
 document.onkeydown = keyDownSearch;
 
@@ -128,10 +138,6 @@ function keyDownSearch(e) {
     if (code == 13) {
         sendBtnClick();
     }
-}
-
-function clearScreenClick() {
-    $('#talkWin').html("");
 }
 
 /**
