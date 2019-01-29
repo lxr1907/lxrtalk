@@ -196,6 +196,7 @@ var delegateFuncs = {
             groupMap[groupName].usersMap[i].socket.emit('news', {
                 m: "加入了该群",
                 n: clientSockets[socket.id].name,
+                g: groupName,
                 t: new Date()
             });
         }
