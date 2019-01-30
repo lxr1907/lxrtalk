@@ -6,82 +6,123 @@ document.addEventListener('visibilitychange', function () {
         document.title = "聊聊";
     }
 });
-var myname = "";
+var defaultName = "";
+//已加入的分组列表
+var myGroupMap = {};
 var MaxDisplayMessages = 20;
 var MaxNameLength = 10;
 $(function () {
-    //var name = prompt("设置昵称：");
-    //myname = name;
-    //setMyname(name);
     $("#textDiv").hide();
     //预防网页劫持广告注入
     $("iframe").remove();
 });
+
+function setLocalStorate(key, val) {
+    var storage = window.localStorage;
+    storage[key] = val;
+}
+
+function getLocalStorate(key, val) {
+    var storage = window.localStorage;
+    return storage[key];
+}
+
+socket.on('connect', function () {
+    var myName = getLocalStorate("myName");
+    //根据缓存直接设置自己的昵称
+    if (myName != null && myName.length != 0) {
+        setMyName(myName);
+    }
+});
 socket.on('news', function (data) {
     if (data.n == null) {
-        data.n = "";
+        data.n = defaultName;
     }
-    //清除第一条
-    if ($('#talkWin').children().length > MaxDisplayMessages) {
-        $('#talkWin').children(":first").remove();
-    }
+
     //打印历史消息
     if (data.l != null) {
-        $('#talkWin').html("");
-        //showHistoryList(data.l);
+        $('#groupWin' + defultWin).html("");
+        for (var i in data.l) {
+            if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:image") != -1) {
+                createNameSpan(data.l[i]);
+                createImg(data.l[i].m);
+            } else if (data.l[i].m.length > 200 && data.l[i].m.indexOf("data:video") != -1) {
+                createNameSpan(data.l[i]);
+                createVideo(data.l[i].m);
+            } else {
+                createText(data.l[i]);
+            }
+        }
+    }
+    //有组名发到分组，没有则组名为默认组
+
+    if (data.g == null) {
+        data.g = defultWin;
     }
     if (data.m.indexOf("data:image") != -1) {
-        createNameSpan(data.n);
-        createImg(data.m);
+        createImg(data);
     } else if (data.m.indexOf("data:video") != -1) {
-        createNameSpan(data.n);
-        createVideo(data.m);
+        createVideo(data);
     } else {
         createText(data)
     }
+    //调整每个tab的消息可见性
+    resetTab();
     //新消息提示
     document.title = "新消息！";
+    if (data.g != defultWin) {
+        newMessageTabCss(data.g);
+    }
 });
 
-function showHistoryList(dataList) {
-    for (var i in dataList) {
-        if (dataList[i].m.length > 200 && dataList[i].m.indexOf("data:image") != -1) {
-            createNameSpan(dataList[i].n);
-            createImg(dataList[i].m);
-        } else if (dataList[i].m.length > 200 && dataList[i].m.indexOf("data:video") != -1) {
-            createNameSpan(dataList[i].n);
-            createVideo(dataList[i].m);
-        } else {
-            createText(dataList[i]);
+//有新消息的群tab变为粉色
+function newMessageTabCss(groupName) {
+    var tabs = document.getElementsByClassName('tab-head')[0].getElementsByTagName('input');
+    for (var i = 0, len = tabs.length; i < len; i++) {
+        if (groupName === tabs[i].getAttribute("name")) {
+            tabs[i].className = 'message';
         }
     }
 }
+
+socket.on('joinGroupSuccess', function (data) {
+    joinGroupSuccess(data);
+});
 
 function createText(data) {
     var timeStr = "";
     if (data.t != null) {
         timeStr = dataToStr(new Date(data.t), 'h:m');
     }
-    //解密文本
-    data.m = getDAesString(data.m, data.n);
-    $('#talkWin').append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+    $('#groupWin' + data.g).append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
+    cleanFirstIfReachMax('#groupWin' + data.g);
 }
 
-function createImg(imgData) {
+function cleanFirstIfReachMax(tag) {
+    //清除第一条
+    if ($(tag).children().length > MaxDisplayMessages) {
+        $(tag).children(":first").remove();
+    }
+}
+
+function createImg(data) {
+    createNameSpan(data);
     var img = new Image();//创建img容器
-    img.src = imgData;//给img容器引入base64的图片
+    img.src = data.m;//给img容器引入base64的图片
     img.style.width = "60px";
     img.style.height = "60px";
     $(img).click(function () {
         imgShow(img);
     });
-    $('#talkWin').append(img);
+    $('#groupWin' + data.g).append(img);
 }
 
-function createVideo(videoData) {
+function createVideo(data) {
+    createNameSpan(data);
+    var videoData = data.m;
     var userAgent = navigator.userAgent;
     if (userAgent.indexOf("Safari") > -1) {
-        createImg(videoData);
+        createImg(data);
         return;
     }
     var video = document.createElement('video');//创建video容器
@@ -91,39 +132,33 @@ function createVideo(videoData) {
     $(video).click(function () {
         videoShow(video);
     });
-    $('#talkWin').append(video);
+    $('#groupWin' + data.g).append(video);
 }
 
-function createNameSpan(name) {
+function createNameSpan(data) {
+    var name = data.n;
     var nameSpan = "";
     if (name != null && name.length != 0) {
         nameSpan = '<span>' + htmlEncodeJQ(name) + "：</span>";
     }
-    $('#talkWin').append('<div>' + nameSpan + '</div>');
+    $('#groupWin' + data.g).append('<div>' + nameSpan + '</div>');
 }
 
 function sendBtnClick() {
     var message = $('#inputText').val();
-    //加密文本
-    messageAes = getAesString(message, myname);
-    socket.emit('clientmessage', {m: 'broadcast', param: {text: messageAes}});
-
-    $('#talkWin').append('<div>' + dataToStr(new Date(), 'h:m') + ' <span class="mymessage">我</span>：<span>' + htmlEncodeJQ(message) + '</span></div>');
+    if (selectedGroup == defultWin) {
+        socket.emit('clientmessage', {m: 'broadcast', param: {text: message}});
+    } else {
+        sendToGroup();
+    }
+    $('#groupWin' + selectedGroup).append('<div>' + dataToStr(new Date(), 'h:m') + ' <span class="mymessage">我</span>：<span>' + htmlEncodeJQ(message) + '</span></div>');
     //清除第一条
-    if ($('#talkWin').children().length > MaxDisplayMessages) {
-        $('#talkWin').children(":first").remove();
+    if ($('#groupWin' + selectedGroup).children().length > MaxDisplayMessages) {
+        $('#groupWin' + selectedGroup).children(":first").remove();
     }
     $('#inputText').val('');
-    clearCheck();
 }
 
-function clearCheck() {
-    var imgCount = $("img").length;
-    var max = 18;
-    if (imgCount >= max) {
-        $('#talkWin').html("");
-    }
-}
 
 document.onkeydown = keyDownSearch;
 
@@ -136,22 +171,27 @@ function keyDownSearch(e) {
     }
 }
 
-function clearScreenClick() {
-    $('#talkWin').html("");
-}
-
 /**
  * 设置昵称
  */
 function setNameBtnClick() {
     var name = $("#myname").val();
+    setMyName(name);
+}
+
+function setMyName(name) {
     if (name == null || name.trim().length == 0) {
         return;
     }
-    socket.emit('clientmessage', {m: 'setname', param: {text: name.trim().substring(0, MaxNameLength)}});
+    name = name.trim().substring(0, MaxNameLength);
+    socket.emit('clientmessage', {m: 'setname', param: {text: name}});
+    hideSetNameArea();
+    setLocalStorate("myName", name);
+}
+
+function hideSetNameArea() {
     $("#mynamediv").hide();
     $("#textDiv").show();
-    myname = name;
 }
 
 function htmlEncodeJQ(str) {
@@ -215,22 +255,4 @@ function videoShow(_this) {
         }
         _this.play();
     }
-}
-
-//文本加密解密
-function getAesString(data, keyStr) {//加密
-    if (keyStr == null || keyStr.length == 0) {
-        return data;
-    }
-    var ciphertext = CryptoJS.AES.encrypt(data, keyStr).toString();
-    return ciphertext;    //返回的是base64格式的密文
-}
-
-function getDAesString(ciphertext, keyStr) {//解密
-    if (keyStr == null || keyStr.length == 0) {
-        return ciphertext;
-    }
-    var bytes = CryptoJS.AES.decrypt(ciphertext, keyStr);
-    var originalText = bytes.toString(CryptoJS.enc.Utf8);
-    return originalText;
 }

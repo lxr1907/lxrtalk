@@ -19,8 +19,8 @@
 
 #talkWin {
     overflow: auto;
-    margin-top:30px;
-    margin-bottom:30px;
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
 
 #inputText {
@@ -38,18 +38,48 @@ span {
     z-index: 0;
     overflow: hidden;
     word-break: break-all;
-    border:1px dashed #000;
-    float:left;
+    border: 1px dashed #000;
+    float: left;
     text-align: center;
 }
+
 .containerVideo {
     height: 20%;
     width: 40%;
     z-index: 0;
     overflow: hidden;
     word-break: break-all;
-    border:1px dashed #000;
+    border: 1px dashed #000;
     margin-bottom: 30px;
-    float:left;
+    float: left;
     text-align: center;
+}
+
+<!--
+切换tab-- >
+h2 {
+
+}
+
+.tab-content {
+    border: solid cornflowerblue 1px;
+}
+
+.tab-content div {
+    display: none;
+}
+
+.selected {
+    background-color: cornflowerblue;
+}
+
+.message {
+    background-color: pink;
+}
+.tab-content .show {
+    display: block;
+}
+
+.tab-content .show > div {
+    display: block;
 }
