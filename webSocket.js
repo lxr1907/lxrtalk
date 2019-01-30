@@ -184,15 +184,19 @@ var delegateFuncs = {
         //组密码
         var groupPwd = param.groupPwd;
         if (groupName.length >= 20) {
-            socket.emit('news', {m: " 群组加入失败，不存在该群！", t: new Date()});
+            socket.emit('news', {m: "群组加入失败，不存在该群！", t: new Date()});
             return;
         }
         if (groupMap[groupName] == null) {
-            socket.emit('news', {m: " 群组加入失败，不存在该群！", t: new Date()});
+            socket.emit('news', {m: "群组加入失败，不存在该群！", t: new Date()});
             return;
         }
         if (groupMap[groupName].groupPwd !== groupPwd) {
-            socket.emit('news', {m: " 群组加入失败，密码错误！", t: new Date()});
+            socket.emit('news', {m: "群组加入失败，密码错误！", t: new Date()});
+            return;
+        }
+        if (clientSockets[socket.id].myGroupMap[groupName] != null) {
+            socket.emit('news', {m: "已加入过该群", t: new Date()});
             return;
         }
         //通知群里其他人
