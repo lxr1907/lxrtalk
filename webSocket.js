@@ -5,6 +5,9 @@ const express = require('express');
 const path = require('path');
 var app = express();
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', function (req, res) {
+    res.redirect('/html/index.html');
+});
 var port = 80;
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
