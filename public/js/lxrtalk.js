@@ -94,6 +94,10 @@ function createText(data) {
     if (data.t != null) {
         timeStr = dataToStr(new Date(data.t), 'h:m');
     }
+    //有组名发到分组，没有则组名为默认组
+    if (data.g == null) {
+        data.g = defultWin;
+    }
     $('#groupWin' + data.g).append('<div>' + timeStr + ' <span>' + htmlEncodeJQ(data.n) + "：" + htmlEncodeJQ(data.m) + '</span></div>');
     cleanFirstIfReachMax('#groupWin' + data.g);
 }
