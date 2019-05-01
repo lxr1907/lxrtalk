@@ -74,9 +74,7 @@ var delegateFuncs = {
         var date = new Date();
         //将内容发送至所有人
         for (var i in clientSockets) {
-            if (clientSockets[i].socket !== socket) {
-                clientSockets[i].socket.emit('news', {m: text, n: name, t: date});
-            }
+            clientSockets[i].socket.emit('news', {m: text, n: name, t: date});
         }
         //记录发送内容到历史数据
         messageHistory.push({m: text, n: name});
