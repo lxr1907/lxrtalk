@@ -12,6 +12,8 @@ nodejs中用到express socket.io
 
 2.发送图片，或拖拽上传
 
+3.发送短视频
+
 测试地址：
 
 http://lxrtalk.com:8081/html/index.html
